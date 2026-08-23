@@ -29,6 +29,7 @@
   /* waarschuwing = "te laat"-markeringen (in donker dezelfde goudtint) */
   --laat:          #e0aa3e;
   --laat-rand:     rgba(224,170,62,.5);
+  --dagen:         #b8a6f0;   /* dagen-te-laat-kolommen: zachtpaars */
 
   --blauw:        #4a8fd4;
   --blauw-diep:   #2f6fb0;
@@ -81,6 +82,7 @@ body.licht {
   --laat:          #b45309;                 /* amber-700, leesbaar op pastel */
   --laat-rand:     #fcd34d;                 /* amber-300 */
   --laat-zweem:    #fffbeb;                 /* amber-50 */
+  --dagen:         #7c3aed;                 /* violet-600: dagen-kolommen, duidelijk anders dan rood */
 
   --blauw:        #3b82f6;
   --blauw-diep:   #6366f1;
@@ -239,6 +241,9 @@ body.licht .paneel, body.licht .tegel, body.licht .login-kaart { box-shadow: 0 1
 table { border-collapse: collapse; width: 100%; font-size: 14px; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rand-zacht); white-space: nowrap; }
 th { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--zacht); font-weight: 600; }
+th.sorteerbaar { cursor: pointer; user-select: none; }
+th.sorteerbaar:hover { color: var(--tekst); }
+th.sorteerbaar.actief { color: var(--kop-kleur, var(--accent)); }
 tbody tr:hover { background: var(--rij-hover); }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 td.naam { white-space: normal; min-width: 180px; }
@@ -267,7 +272,7 @@ td.naam { white-space: normal; min-width: 180px; }
 .groep-merk.laat { border-color: var(--laat-rand); color: var(--laat); background: var(--laat-zweem, transparent); }
 .groep-inhoud { display: none; padding: 0 14px 12px; }
 .groep.open .groep-inhoud { display: block; }
-.dagen-laat { color: var(--laat); font-weight: 600; }
+.dagen-laat { color: var(--dagen, var(--laat)); font-weight: 600; }
 .bedrag-vervallen { color: var(--rood); font-weight: 600; }
 .dagen-ok { color: var(--zacht); }
 

@@ -87,9 +87,16 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
 
       <div class="paneel">
         <h2>Grootste openstaande debiteuren</h2>
+        <p class="zacht klein">Klik op een kolomkop om te sorteren; nog eens klikken draait de volgorde om.</p>
         <div class="tabel-omhulsel">
           <table id="tabel-top">
-            <thead><tr><th>Debiteur</th><th class="num">Posten</th><th class="num">Openstaand</th><th class="num">Waarvan vervallen</th><th class="num">Oudste (dagen)</th></tr></thead>
+            <thead><tr>
+              <th class="sorteerbaar" data-veld="naam">Debiteur</th>
+              <th class="num sorteerbaar" data-veld="posten">Posten</th>
+              <th class="num sorteerbaar" data-veld="open">Openstaand</th>
+              <th class="num sorteerbaar" data-veld="vervallen">Waarvan vervallen</th>
+              <th class="num sorteerbaar" data-veld="oudste">Oudste (dagen)</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>

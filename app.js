@@ -19,6 +19,7 @@ let emails = {};            // debiteurnummer -> e-mailadres
 let logregels = [];
 let openGroepen = new Set();
 let matchKeuze = { ontvangst: null, facturen: new Set() };
+let topSortering = { veld: "open", richting: -1 };   // tabel "Grootste openstaande debiteuren"
 
 /* ================================ hulpjes ================================ */
 
@@ -253,7 +254,28 @@ function vernieuwOverzicht() {
       <td class="num">${Math.round(Math.abs(r.bedrag) / somAbs * 100)}%</td>
     </tr>`).join("") || `<tr><td colspan="4" class="zacht">Nog niets opgehaald.</td></tr>`;
 
-  const top = groepen.slice().sort((a, b) => b.open - a.open).slice(0, 15);
+  const kies = {
+    naam:      g => (g.naam || g.klant).toLowerCase(),
+    posten:    g => g.posten.length,
+    open:      g => g.open,
+    vervallen: g => g.vervallen,
+    oudste:    g => g.oudste ?? -1
+  }[topSortering.veld] || (g => g.open);
+  const top = groepen.slice().sort((a, b) => {
+    const va = kies(a), vb = kies(b);
+    return (va < vb ? -1 : va > vb ? 1 : 0) * topSortering.richting;
+  }).slice(0, 15);
+  document.querySelectorAll("#tabel-top th.sorteerbaar").forEach(th => {
+    const actief = th.dataset.veld === topSortering.veld;
+    th.classList.toggle("actief", actief);
+    th.querySelector(".pijl")?.remove();
+    if (actief) {
+      const pijl = document.createElement("span");
+      pijl.className = "pijl";
+      pijl.textContent = topSortering.richting === -1 ? " ▼" : " ▲";
+      th.appendChild(pijl);
+    }
+  });
   document.querySelector("#tabel-top tbody").innerHTML = top.map(g => `
     <tr>
       <td class="naam"><b>${escapeHtml(g.naam || g.klant)}</b> <span class="zacht klein">${escapeHtml(g.klant)}</span></td>
@@ -925,6 +947,12 @@ document.getElementById("btn-thema").addEventListener("click", () => {
   toonThemaKnop();
 });
 toonThemaKnop();
+
+document.querySelectorAll("#tabel-top th.sorteerbaar").forEach(th => th.addEventListener("click", () => {
+  if (topSortering.veld === th.dataset.veld) topSortering.richting *= -1;
+  else topSortering = { veld: th.dataset.veld, richting: th.dataset.veld === "naam" ? 1 : -1 };
+  vernieuwOverzicht();
+}));
 
 document.querySelectorAll(".nav-knop").forEach(k => k.addEventListener("click", () => naarTab(k.dataset.tab)));
 document.getElementById("btn-ophalen").addEventListener("click", ophalen);
