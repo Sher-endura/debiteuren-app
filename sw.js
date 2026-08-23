@@ -3,8 +3,8 @@
    bewaard door de service worker: elke aanroep naar het doorgeefluik gaat
    rechtstreeks naar het netwerk. */
 
-const CACHE = "debiteuren-endura-v1";
-const OMHULSEL = ["./", "index.html", "styles.css", "api.js", "app.js", "config.js", "manifest.json", "icoon.svg"];
+const CACHE = "debiteuren-endura-v2";
+const OMHULSEL = ["./", "index.html", "styles.css", "api.js", "app.js", "config.js", "manifest.json", "icoon.svg", "werkbeschrijving.html"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(OMHULSEL)).then(() => self.skipWaiting()));

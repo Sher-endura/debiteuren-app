@@ -641,7 +641,7 @@ async function verstuurAlles() {
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) throw new Error("Je bent niet meer ingelogd — ververs de pagina en log opnieuw in.");
-    const resp = await fetch(`${CFG.SUPABASE_URL}/functions/v1/aanmaningen-mail`, {
+    const resp = await fetch(`${CFG.FUNCTIES_URL || CFG.SUPABASE_URL}/functions/v1/aanmaningen-mail`, {
       method: "POST",
       headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/json" },
       body: JSON.stringify({ berichten: berichten.map(b => ({ aan: b.aan, onderwerp: b.onderwerp, tekst: b.tekst })) })

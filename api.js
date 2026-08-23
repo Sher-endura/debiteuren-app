@@ -88,7 +88,7 @@ async function dlVerstuur(xml, watVoor) {
       if (!CLOUD) throw new Error("Geen verbinding ingesteld (config.js is leeg).");
       const { data: { session } } = await sb.auth.getSession();
       if (!session) throw new Error("Je bent niet meer ingelogd — ververs de pagina en log opnieuw in.");
-      resp = await fetch(`${CFG.SUPABASE_URL}/functions/v1/directlink`, {
+      resp = await fetch(`${CFG.FUNCTIES_URL || CFG.SUPABASE_URL}/functions/v1/directlink`, {
         method: "POST",
         headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/xml" },
         body: xml
