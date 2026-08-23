@@ -259,7 +259,7 @@ function vernieuwOverzicht() {
       <td class="naam"><b>${escapeHtml(g.naam || g.klant)}</b> <span class="zacht klein">${escapeHtml(g.klant)}</span></td>
       <td class="num">${g.posten.length}</td>
       <td class="num">${geld(g.open, [...g.valutas][0] || hoofdvaluta)}</td>
-      <td class="num ${g.vervallen ? "dagen-laat" : "dagen-ok"}">${g.vervallen ? geld(g.vervallen, "") : "—"}</td>
+      <td class="num ${g.vervallen ? "bedrag-vervallen" : "dagen-ok"}">${g.vervallen ? geld(g.vervallen, "") : "—"}</td>
       <td class="num ${g.oudste > 0 ? "dagen-laat" : "dagen-ok"}">${g.oudste == null ? "—" : g.oudste}</td>
     </tr>`).join("") || `<tr><td colspan="5" class="zacht">Nog niets opgehaald.</td></tr>`;
 }
