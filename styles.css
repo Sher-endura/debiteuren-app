@@ -111,11 +111,11 @@ body.licht {
    totaal = blauw, vervallen = amber, posten = teal, debiteuren = groen. */
 body.licht .tegel:nth-child(1) { background: #eff6ff; border-color: #bfdbfe; }
 body.licht .tegel:nth-child(2) { background: #fffbeb; border-color: #fde68a; }
-body.licht .tegel:nth-child(3) { background: #f0fdfa; border-color: #99f6e4; }
+body.licht .tegel:nth-child(3) { background: #f5f3ff; border-color: #ddd6fe; }
 body.licht .tegel:nth-child(4) { background: #f0fdf4; border-color: #bbf7d0; }
 body.licht .tegel:nth-child(1) .tegel-kop { color: #1d4ed8; }
 body.licht .tegel:nth-child(2) .tegel-kop { color: #b45309; }
-body.licht .tegel:nth-child(3) .tegel-kop { color: #0f766e; }
+body.licht .tegel:nth-child(3) .tegel-kop { color: #6d28d9; }
 body.licht .tegel:nth-child(4) .tegel-kop { color: #15803d; }
 body.licht .zijbalk { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); }
 body.licht th { color: #475569; }
