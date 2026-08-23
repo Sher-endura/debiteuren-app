@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<script>/* thema toepassen vóór de eerste weergave, anders knippert het scherm */
+try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.classList.add("licht"); } catch (e) {}</script>
 
 <!-- ============ Inloggen ============ -->
 <div id="login-overlay" class="overlay" style="display:none">
@@ -43,6 +45,7 @@
     </nav>
     <div class="zijbalk-voet">
       <div id="kop-gebruiker" class="zacht klein"></div>
+      <button class="knop stil klein" id="btn-thema" title="Wissel tussen donker en licht">🌙 Donker</button>
       <button class="knop stil klein" id="btn-uitloggen">Uitloggen</button>
     </div>
   </aside>

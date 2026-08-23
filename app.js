@@ -914,6 +914,18 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   }
 });
 
+/* Thema: donker is standaard; de keuze wordt per browser onthouden. */
+function toonThemaKnop() {
+  document.getElementById("btn-thema").textContent =
+    document.body.classList.contains("licht") ? "☀️ Licht" : "🌙 Donker";
+}
+document.getElementById("btn-thema").addEventListener("click", () => {
+  document.body.classList.toggle("licht");
+  try { localStorage.setItem("debiteuren.thema", document.body.classList.contains("licht") ? "licht" : "donker"); } catch (e) {}
+  toonThemaKnop();
+});
+toonThemaKnop();
+
 document.querySelectorAll(".nav-knop").forEach(k => k.addEventListener("click", () => naarTab(k.dataset.tab)));
 document.getElementById("btn-ophalen").addEventListener("click", ophalen);
 document.getElementById("btn-uitloggen").addEventListener("click", () => sb.auth.signOut());
