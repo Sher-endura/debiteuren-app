@@ -63,6 +63,19 @@ async function initAuth() {
 
 const STANDAARD_ENDPOINT = "https://secure.directlink.nu/api/v1/dataimport/upload";
 
+/* Het endpointveld vergeeft slordigheden: leeg = standaard, alleen een domein
+   krijgt het pad erbij, en https:// wordt aangevuld. Een kale domeinnaam gaf
+   eerder HTTP 405 van de DirectLink-server (echt gebeurd, 23 aug 2026). */
+function maakEndpoint(ingevoerd) {
+  let e = (ingevoerd || "").trim();
+  if (!e) return STANDAARD_ENDPOINT;
+  if (!/^https?:\/\//i.test(e)) e = "https://" + e;
+  const zonderSlash = e.replace(/\/+$/, "");
+  // Alleen een domein (geen pad)? Dan het standaardpad erachter.
+  if (/^https?:\/\/[^\/]+$/i.test(zonderSlash)) return zonderSlash + "/api/v1/dataimport/upload";
+  return zonderSlash;
+}
+
 /* Twee routes:
    - "direct": rechtstreeks naar DirectLink met het token dat op het tabblad
      Instellingen is geplakt — zoals Template 1 uit het onboardingpakket.
@@ -76,9 +89,9 @@ async function dlVerstuur(xml, watVoor) {
   try {
     if (inst.verbinding !== "luik") {
       bron = "DirectLink";
-      const token = (inst.dlToken || "").trim();
+      const token = (inst.dlToken || "").trim().replace(/^bearer\s+/i, "");
       if (!token) throw new Error("Plak eerst het DirectLink-token op het tabblad Instellingen (blok Verbinding).");
-      resp = await fetch((inst.dlEndpoint || "").trim() || STANDAARD_ENDPOINT, {
+      resp = await fetch(maakEndpoint(inst.dlEndpoint), {
         method: "POST",
         headers: { "Authorization": "Bearer " + token, "Content-Type": "application/xml" },
         body: xml
@@ -104,7 +117,14 @@ async function dlVerstuur(xml, watVoor) {
         : ""));
   }
   logBij(watVoor, xml, raw, resp.ok, performance.now() - begin);
-  if (!resp.ok) throw new Error(`${bron} gaf HTTP ${resp.status}: ${raw.slice(0, 300)}`);
+  if (!resp.ok) {
+    const hint = resp.status === 405
+      ? " — dit betekent meestal dat het DirectLink-endpoint op Instellingen niet klopt; maak dat veld leeg, dan gebruikt de app het juiste adres."
+      : resp.status === 401
+      ? " — het token wordt geweigerd; controleer of het volledig en zonder spaties geplakt is."
+      : "";
+    throw new Error(`${bron} gaf HTTP ${resp.status}: ${raw.slice(0, 300)}${hint}`);
+  }
   return raw;
 }
 
