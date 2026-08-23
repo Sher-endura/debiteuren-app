@@ -164,7 +164,7 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
       </div>
       <div class="paneel">
         <h2>Ontvangsten die nog niet afgeletterd zijn</h2>
-        <p class="zacht klein">Dit zijn openstaande posten met een <b>negatief</b> bedrag: geld dat binnenkwam en nog aan een factuur gehangen moet worden.</p>
+        <p class="zacht klein">Dit zijn openstaande posten met een <b>negatief</b> bedrag: geld dat binnenkwam en nog aan een factuur gehangen moet worden. Je kunt er <b>meerdere tegelijk</b> aanvinken (bijvoorbeeld een ontvangst én een afboekregel), zolang ze van dezelfde debiteur zijn.</p>
         <div class="tabel-omhulsel">
           <table id="tabel-ontvangsten">
             <thead><tr><th></th><th>Debiteur</th><th>Boekstuk</th><th>Datum</th><th class="num">Openstaand</th></tr></thead>
@@ -181,7 +181,7 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
           </table>
         </div>
         <div class="match-voet">
-          <div>Ontvangst <b id="match-ontvangst">0,00</b> · gekozen facturen <b id="match-facturen">0,00</b> · verschil <b id="match-verschil">0,00</b></div>
+          <div>Creditposten <b id="match-ontvangst">0,00</b> · gekozen facturen <b id="match-facturen">0,00</b> · verschil <b id="match-verschil">0,00</b> <span class="zacht klein">(moet nul zijn)</span></div>
           <div class="knoppen">
             <button class="knop stil" id="btn-match-xml">Toon match-bericht</button>
             <button class="knop goud" id="btn-match-door">Doorvoeren in Twinfield</button>

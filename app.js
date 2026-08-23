@@ -18,7 +18,7 @@ let opgehaaldOp = null;     // wanneer voor het laatst opgehaald
 let emails = {};            // debiteurnummer -> e-mailadres
 let logregels = [];
 let openGroepen = new Set();
-let matchKeuze = { ontvangst: null, facturen: new Set() };
+let matchKeuze = { ontvangsten: new Set(), facturen: new Set() };
 let topSortering = { veld: "open", richting: -1 };   // tabel "Grootste openstaande debiteuren"
 
 /* ================================ hulpjes ================================ */
@@ -721,6 +721,8 @@ async function haalEmails() {
 
 /* =============================== afletteren ============================== */
 
+/* Meerdere creditposten tegelijk kan (bijv. een ontvangst én een afboekregel),
+   maar alleen van dezelfde debiteur — matchen over debiteuren heen kan niet. */
 function vernieuwAfletteren() {
   const ontvangsten = posten.filter(p => p.open < 0);
   const tb = document.querySelector("#tabel-ontvangsten tbody");
@@ -731,26 +733,41 @@ function vernieuwAfletteren() {
   }
   tb.innerHTML = ontvangsten.map((p, i) => `
     <tr>
-      <td><input type="radio" name="ontvangst" value="${i}" ${matchKeuze.ontvangst === p ? "checked" : ""}></td>
+      <td><input type="checkbox" class="ontvangst-vink" value="${i}" ${matchKeuze.ontvangsten.has(p) ? "checked" : ""}></td>
       <td class="naam">${escapeHtml(p.klantnaam || p.klant)} <span class="zacht klein">${escapeHtml(p.klant)}</span></td>
       <td>${escapeHtml((p.boekstukcode + " " + p.boekstuknr).trim())}</td>
       <td>${datumTekst(p.datum)}</td>
       <td class="num">${geld(p.open, p.valuta)}</td>
     </tr>`).join("");
 
-  tb.querySelectorAll('input[name="ontvangst"]').forEach(radio => radio.addEventListener("change", () => {
-    matchKeuze = { ontvangst: ontvangsten[+radio.value], facturen: new Set() };
+  tb.querySelectorAll(".ontvangst-vink").forEach(vink => vink.addEventListener("change", () => {
+    const p = ontvangsten[+vink.value];
+    if (vink.checked) {
+      const eerste = [...matchKeuze.ontvangsten][0];
+      if (eerste && eerste.klant !== p.klant) {
+        vink.checked = false;
+        toonMelding("melding-match", "fout", "Je kunt alleen posten van dezelfde debiteur samen afletteren.");
+        return;
+      }
+      matchKeuze.ontvangsten.add(p);
+    } else {
+      matchKeuze.ontvangsten.delete(p);
+      if (!matchKeuze.ontvangsten.size) matchKeuze.facturen = new Set();
+    }
     toonMatchFacturen();
   }));
-  if (matchKeuze.ontvangst) toonMatchFacturen();
+  if (matchKeuze.ontvangsten.size) toonMatchFacturen();
 }
 
 function toonMatchFacturen() {
-  const o = matchKeuze.ontvangst;
+  const gekozen = [...matchKeuze.ontvangsten];
+  const o = gekozen[0];
   const paneel = document.getElementById("paneel-match");
   if (!o) { paneel.style.display = "none"; return; }
   paneel.style.display = "";
-  document.getElementById("match-debiteur").textContent = (o.klantnaam || o.klant) + " (" + o.klant + ")";
+  document.getElementById("match-debiteur").textContent =
+    (o.klantnaam || o.klant) + " (" + o.klant + ")" +
+    (gekozen.length > 1 ? ` — ${gekozen.length} creditposten gekozen` : "");
   document.getElementById("match-xml").style.display = "none";
   wisMelding("melding-match");
 
@@ -777,25 +794,23 @@ function toonMatchFacturen() {
 }
 
 function vernieuwMatchVoet() {
-  const o = matchKeuze.ontvangst;
+  const somOntvangsten = [...matchKeuze.ontvangsten].reduce((s, p) => s + p.open, 0);
   const somFacturen = [...matchKeuze.facturen].reduce((s, p) => s + p.open, 0);
-  const verschil = (o ? o.open : 0) + somFacturen;
-  document.getElementById("match-ontvangst").textContent = geld(o ? o.open : 0, o ? o.valuta : "");
+  const verschil = somOntvangsten + somFacturen;
+  const valuta = [...matchKeuze.ontvangsten][0]?.valuta || "";
+  document.getElementById("match-ontvangst").textContent = geld(somOntvangsten, valuta);
   document.getElementById("match-facturen").textContent = geld(somFacturen, "");
   const el = document.getElementById("match-verschil");
   el.textContent = geld(verschil, "");
   el.className = Math.abs(verschil) < 0.005 ? "groen-tekst" : "goud-tekst";
-  document.getElementById("btn-match-door").disabled = !matchKeuze.facturen.size;
+  document.getElementById("btn-match-door").disabled = !matchKeuze.facturen.size || !matchKeuze.ontvangsten.size;
 }
 
 function matchRegels() {
-  const o = matchKeuze.ontvangst;
-  // Twinfield wil per regel het bedrag dat op díe regel afgeletterd wordt.
-  // De ontvangst neemt het volledige openstaande bedrag; elke factuur de hare.
-  return [
-    { boekstukcode: o.boekstukcode, boekstuknr: o.boekstuknr, regelnr: o.regelnr, bedrag: o.open },
-    ...[...matchKeuze.facturen].map(p => ({ boekstukcode: p.boekstukcode, boekstuknr: p.boekstuknr, regelnr: p.regelnr, bedrag: p.open }))
-  ];
+  // Twinfield wil per regel het bedrag dat op díe regel afgeletterd wordt;
+  // elke post gaat voor zijn volledige openstaande bedrag mee.
+  return [...matchKeuze.ontvangsten, ...matchKeuze.facturen].map(p =>
+    ({ boekstukcode: p.boekstukcode, boekstuknr: p.boekstuknr, regelnr: p.regelnr, bedrag: p.open }));
 }
 
 /* =============================== instellingen ============================ */
@@ -872,7 +887,7 @@ async function ophalen() {
     const nieuw = normaliseer(rijen, velden);
     posten = nieuw;
     opgehaaldOp = new Date().toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
-    matchKeuze = { ontvangst: null, facturen: new Set() };
+    matchKeuze = { ontvangsten: new Set(), facturen: new Set() };
     bewaarPosten();
     vernieuwAlles();
     if (!rijen.length) {
@@ -977,11 +992,12 @@ document.getElementById("btn-match-xml").addEventListener("click", () => {
 });
 
 document.getElementById("btn-match-door").addEventListener("click", async () => {
-  const o = matchKeuze.ontvangst;
+  const ontvangsten = [...matchKeuze.ontvangsten];
+  const somOntvangsten = ontvangsten.reduce((s, p) => s + p.open, 0);
   const somFacturen = [...matchKeuze.facturen].reduce((s, p) => s + p.open, 0);
-  const verschil = o.open + somFacturen;
+  const verschil = somOntvangsten + somFacturen;
   const vraag = `Afletteren doorvoeren in Twinfield, administratie ${inst.office}?\n\n` +
-    `Ontvangst ${o.boekstukcode} ${o.boekstuknr}: ${geld(o.open, o.valuta)}\n` +
+    ontvangsten.map(o => `Creditpost ${o.boekstukcode} ${o.boekstuknr}: ${geld(o.open, o.valuta)}`).join("\n") + "\n" +
     `${matchKeuze.facturen.size} factuur/facturen: ${geld(somFacturen, "")}\n` +
     `Verschil: ${geld(verschil, "")}\n\n` +
     (Math.abs(verschil) >= 0.005 ? "Let op: het verschil is niet nul. Twinfield weigert dit waarschijnlijk.\n\n" : "") +
