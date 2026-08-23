@@ -1,0 +1,225 @@
+/* Debiteuren · Endura — donker met goud, naar het architectuurdiagram van het
+   DirectLink-onboardingpakket. Bewust een andere indeling dan de Bankboeker:
+   vaste zijbalk met tabbladen, tegels bovenaan, brede tabellen. */
+
+:root {
+  --nacht:        #0b1224;
+  --nacht-diep:   #070d1b;
+  --paneel:       #121c36;
+  --paneel-op:    #17233f;
+  --rand:         #23335a;
+  --rand-zacht:   #1b2848;
+  --goud:         #e0aa3e;
+  --goud-diep:    #b8862a;
+  --blauw:        #4a8fd4;
+  --blauw-diep:   #2f6fb0;
+  --tekst:        #e9eef8;
+  --zacht:        #9db0cc;
+  --rood:         #e8736a;
+  --groen:        #5fbf8f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 700px at 20% -10%, #16243f 0%, var(--nacht) 55%, var(--nacht-diep) 100%);
+  color: var(--tekst);
+  font: 15px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+h1 { font-size: 22px; margin: 0; font-weight: 600; letter-spacing: .2px; }
+h2 { font-size: 15px; margin: 0 0 4px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; color: var(--goud); }
+p  { margin: 4px 0 0; }
+.zacht { color: var(--zacht); }
+.klein { font-size: 13px; }
+.mono  { font-family: "Cascadia Mono", Consolas, monospace; }
+.goud-tekst { color: var(--goud); }
+.rek { flex: 1; }
+
+/* ---------- inloggen ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(900px 600px at 50% 0%, #16243f, var(--nacht-diep));
+  padding: 20px;
+}
+.login-kaart {
+  width: 100%; max-width: 390px;
+  background: linear-gradient(160deg, var(--paneel-op), var(--paneel));
+  border: 1px solid var(--rand); border-radius: 16px; padding: 32px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.45);
+}
+.login-kaart h1 { margin: 14px 0 2px; font-size: 26px; }
+.login-kaart label { display: block; margin: 16px 0 5px; font-size: 13px; color: var(--zacht); }
+.login-kaart input { width: 100%; }
+.login-kaart .knop { margin-top: 22px; }
+
+.merk { display: flex; align-items: center; gap: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; font-size: 13px; color: var(--zacht); }
+.merk-punt { width: 10px; height: 10px; border-radius: 3px; background: linear-gradient(135deg, var(--goud), var(--goud-diep)); box-shadow: 0 0 14px rgba(224,170,62,.55); }
+.merk-onder { font-size: 21px; font-weight: 600; margin: 4px 0 26px 19px; color: var(--tekst); }
+
+/* ---------- raamwerk ---------- */
+.app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+
+.zijbalk {
+  background: linear-gradient(180deg, rgba(18,28,54,.95), rgba(9,15,30,.95));
+  border-right: 1px solid var(--rand-zacht);
+  padding: 26px 18px 18px; display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+}
+#nav { display: flex; flex-direction: column; gap: 3px; }
+.nav-knop {
+  display: flex; align-items: center; gap: 10px;
+  background: none; border: 0; border-radius: 9px;
+  color: var(--zacht); font: inherit; text-align: left;
+  padding: 10px 12px; cursor: pointer;
+}
+.nav-knop:hover { background: rgba(74,143,212,.12); color: var(--tekst); }
+.nav-knop.actief { background: linear-gradient(90deg, rgba(224,170,62,.18), rgba(224,170,62,.04)); color: var(--tekst); box-shadow: inset 2px 0 0 var(--goud); }
+.nav-knop .ico { color: var(--goud); font-size: 12px; width: 14px; text-align: center; }
+.nav-knop .telbol { margin-left: auto; background: var(--goud); color: #2a1c00; border-radius: 10px; padding: 0 7px; font-size: 11px; font-weight: 700; }
+.zijbalk-voet { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--rand-zacht); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+
+main { padding: 24px 28px 60px; min-width: 0; }
+
+.balk { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.balk-rechts { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.stand { font-size: 13px; color: var(--zacht); }
+
+/* ---------- knoppen en velden ---------- */
+.knop {
+  border: 1px solid var(--rand); background: var(--paneel-op); color: var(--tekst);
+  font: inherit; padding: 9px 16px; border-radius: 9px; cursor: pointer;
+}
+.knop:hover:not(:disabled) { border-color: var(--blauw); background: #1b2a4c; }
+.knop:disabled { opacity: .5; cursor: default; }
+.knop.goud { background: linear-gradient(135deg, var(--goud), var(--goud-diep)); border-color: var(--goud-diep); color: #241800; font-weight: 600; }
+.knop.goud:hover:not(:disabled) { filter: brightness(1.08); background: linear-gradient(135deg, var(--goud), var(--goud-diep)); }
+.knop.stil { background: transparent; }
+.knop.klein { padding: 5px 11px; font-size: 13px; }
+.knop.breed { width: 100%; padding: 12px; }
+.knoppen { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+input, select, textarea {
+  background: #0d1730; color: var(--tekst);
+  border: 1px solid var(--rand); border-radius: 8px; padding: 9px 11px; font: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--goud); box-shadow: 0 0 0 3px rgba(224,170,62,.14); }
+label { font-size: 13px; color: var(--zacht); }
+.vink { display: flex; align-items: center; gap: 7px; color: var(--zacht); font-size: 13px; cursor: pointer; }
+.vink input { accent-color: var(--goud); }
+
+/* ---------- panelen en tegels ---------- */
+.paneel {
+  background: linear-gradient(165deg, rgba(23,35,63,.85), rgba(18,28,54,.85));
+  border: 1px solid var(--rand-zacht); border-radius: 14px;
+  padding: 20px 22px; margin-bottom: 18px;
+}
+.paneel.waarschuwing { border-color: rgba(224,170,62,.45); background: linear-gradient(165deg, rgba(56,42,12,.55), rgba(24,20,10,.5)); }
+
+.tegels { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.tegel {
+  background: linear-gradient(160deg, rgba(31,47,84,.9), rgba(16,25,47,.9));
+  border: 1px solid var(--rand-zacht); border-radius: 14px; padding: 16px 18px;
+}
+.tegel-kop { font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: var(--zacht); }
+.tegel-cijfer { font-size: 26px; font-weight: 600; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.tegel-voet { font-size: 12px; color: var(--zacht); margin-top: 2px; }
+
+.werkbalk { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.werkbalk input[type=search] { min-width: 240px; flex: 1 1 240px; }
+
+/* ---------- tabellen ---------- */
+.tabel-omhulsel { overflow-x: auto; margin-top: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rand-zacht); white-space: nowrap; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--zacht); font-weight: 600; }
+tbody tr:hover { background: rgba(74,143,212,.08); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.naam { white-space: normal; min-width: 180px; }
+
+/* ---------- ouderdomsstaven ---------- */
+.staven { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.staaf-rij { display: grid; grid-template-columns: 148px 1fr 110px; gap: 12px; align-items: center; font-size: 13px; }
+.staaf-baan { background: rgba(255,255,255,.06); border-radius: 6px; height: 14px; overflow: hidden; }
+.staaf-vul { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--blauw-diep), var(--blauw)); }
+.staaf-rij.laat .staaf-vul { background: linear-gradient(90deg, var(--goud-diep), var(--goud)); }
+.staaf-rij .num { color: var(--zacht); }
+
+/* ---------- groepen per debiteur ---------- */
+.groepen { display: flex; flex-direction: column; gap: 10px; }
+.groep { border: 1px solid var(--rand-zacht); border-radius: 12px; overflow: hidden; background: rgba(13,23,48,.5); }
+.groep-kop {
+  display: grid; grid-template-columns: 26px 1fr auto auto; gap: 12px; align-items: center;
+  padding: 11px 14px; cursor: pointer; background: rgba(31,47,84,.45);
+}
+.groep-kop:hover { background: rgba(31,47,84,.7); }
+.groep-kop .pijl { color: var(--goud); font-size: 11px; }
+.groep-naam { font-weight: 600; }
+.groep-naam small { display: block; font-weight: 400; color: var(--zacht); font-size: 12px; }
+.groep-bedrag { font-variant-numeric: tabular-nums; font-weight: 600; }
+.groep-merk { font-size: 12px; padding: 2px 9px; border-radius: 20px; border: 1px solid var(--rand); color: var(--zacht); }
+.groep-merk.laat { border-color: rgba(224,170,62,.5); color: var(--goud); }
+.groep-inhoud { display: none; padding: 0 14px 12px; }
+.groep.open .groep-inhoud { display: block; }
+.dagen-laat { color: var(--goud); font-weight: 600; }
+.dagen-ok { color: var(--zacht); }
+
+/* ---------- aanmaningen ---------- */
+.keuzelijst { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; margin: 12px 0 6px; }
+.keuzeregel { display: flex; align-items: center; gap: 9px; border: 1px solid var(--rand-zacht); border-radius: 9px; padding: 9px 11px; font-size: 13px; }
+.keuzeregel input { accent-color: var(--goud); }
+.keuzeregel .bedrag { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--goud); }
+.brief { border: 1px solid var(--rand-zacht); border-radius: 12px; margin-top: 14px; overflow: hidden; }
+.brief-kop { display: flex; align-items: center; gap: 12px; padding: 11px 14px; background: rgba(31,47,84,.45); flex-wrap: wrap; }
+.brief-kop b { font-size: 14px; }
+.brief textarea { width: 100%; border: 0; border-top: 1px solid var(--rand-zacht); border-radius: 0; min-height: 240px; font-family: "Cascadia Mono", Consolas, monospace; font-size: 13px; resize: vertical; }
+.brief input.email { min-width: 220px; }
+
+/* ---------- afletteren ---------- */
+.match-voet { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 14px; border-top: 1px solid var(--rand-zacht); padding-top: 14px; }
+.match-voet .knoppen { margin: 0 0 0 auto; }
+.code { background: #0a1122; border: 1px solid var(--rand-zacht); border-radius: 10px; padding: 14px; overflow-x: auto; font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; color: #c9d8ee; white-space: pre-wrap; word-break: break-word; }
+
+/* ---------- meldingen ---------- */
+.melding-plek:empty { display: none; }
+.melding { border-radius: 10px; padding: 11px 14px; margin: 12px 0; font-size: 13.5px; border: 1px solid; }
+.melding.ok   { border-color: rgba(95,191,143,.45); background: rgba(95,191,143,.1); }
+.melding.fout { border-color: rgba(232,115,106,.5); background: rgba(232,115,106,.1); }
+.melding.bezig{ border-color: rgba(74,143,212,.45); background: rgba(74,143,212,.1); }
+
+/* ---------- logboek ---------- */
+.logregel { border: 1px solid var(--rand-zacht); border-radius: 10px; margin-top: 8px; overflow: hidden; }
+.logregel summary { padding: 9px 13px; cursor: pointer; font-size: 13px; display: flex; gap: 10px; align-items: center; }
+.logregel summary .tijd { color: var(--zacht); font-family: "Cascadia Mono", Consolas, monospace; }
+.logregel summary .status.fout { color: var(--rood); }
+.logregel summary .status.ok { color: var(--groen); }
+.logregel .code { border-radius: 0; border: 0; border-top: 1px solid var(--rand-zacht); max-height: 320px; overflow: auto; }
+
+/* ---------- tabbladen ---------- */
+.tab { display: none; }
+.tab.actief { display: block; }
+
+/* ---------- telefoon ---------- */
+@media (max-width: 820px) {
+  .app { grid-template-columns: 1fr; }
+  .zijbalk {
+    position: sticky; top: 0; height: auto; z-index: 20;
+    border-right: 0; border-bottom: 1px solid var(--rand-zacht);
+    padding: 14px 14px 8px;
+  }
+  .merk-onder { display: none; }
+  #nav { flex-direction: row; overflow-x: auto; gap: 4px; padding-bottom: 4px; }
+  .nav-knop { white-space: nowrap; padding: 8px 12px; }
+  .nav-knop.actief { box-shadow: inset 0 -2px 0 var(--goud); }
+  .zijbalk-voet { margin-top: 10px; flex-direction: row; align-items: center; justify-content: space-between; }
+  main { padding: 18px 14px 60px; }
+  .balk-rechts { margin-left: 0; width: 100%; }
+  .balk-rechts .knop { flex: 1; }
+  .staaf-rij { grid-template-columns: 104px 1fr; }
+  .staaf-rij .num { grid-column: 2; text-align: left; }
+  .groep-kop { grid-template-columns: 20px 1fr auto; }
+  .groep-merk { display: none; }
+}

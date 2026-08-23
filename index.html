@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Debiteuren · Endura</title>
+<meta name="theme-color" content="#0b1224">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============ Inloggen ============ -->
+<div id="login-overlay" class="overlay" style="display:none">
+  <div class="login-kaart">
+    <div class="merk"><span class="merk-punt"></span> Endura</div>
+    <h1>Debiteuren</h1>
+    <p class="zacht">Openstaande posten uit Twinfield. Log in met je Endura-werkaccount.</p>
+    <form id="login-form">
+      <label for="login-email">E-mailadres</label>
+      <input type="email" id="login-email" autocomplete="username" placeholder="naam@endura-aruba.com" required>
+      <label for="login-wachtwoord">Wachtwoord</label>
+      <input type="password" id="login-wachtwoord" autocomplete="current-password" required>
+      <button class="knop goud breed" id="btn-login" type="submit">Inloggen</button>
+    </form>
+    <div id="melding-login" class="melding-plek"></div>
+  </div>
+</div>
+
+<!-- ============ App ============ -->
+<div class="app" id="app" style="display:none">
+
+  <aside class="zijbalk">
+    <div class="merk"><span class="merk-punt"></span> Endura</div>
+    <div class="merk-onder">Debiteuren</div>
+    <nav id="nav">
+      <button class="nav-knop actief" data-tab="overzicht"><span class="ico">◆</span> Overzicht</button>
+      <button class="nav-knop" data-tab="debiteuren"><span class="ico">▤</span> Debiteuren</button>
+      <button class="nav-knop" data-tab="aanmaningen"><span class="ico">✉</span> Aanmaningen</button>
+      <button class="nav-knop" data-tab="afletteren"><span class="ico">⇄</span> Afletteren</button>
+      <button class="nav-knop" data-tab="instellingen"><span class="ico">⚙</span> Instellingen</button>
+      <button class="nav-knop" data-tab="logboek"><span class="ico">≡</span> Logboek</button>
+    </nav>
+    <div class="zijbalk-voet">
+      <div id="kop-gebruiker" class="zacht klein"></div>
+      <button class="knop stil klein" id="btn-uitloggen">Uitloggen</button>
+    </div>
+  </aside>
+
+  <main>
+    <header class="balk">
+      <div>
+        <h1 id="paginatitel">Overzicht</h1>
+        <p class="zacht klein" id="paginahint">Openstaande debiteurenposten van administratie ENDURA.</p>
+      </div>
+      <div class="balk-rechts">
+        <div class="stand" id="stand">Nog niets opgehaald</div>
+        <button class="knop goud" id="btn-ophalen">Ophalen uit Twinfield</button>
+      </div>
+    </header>
+
+    <div id="melding-top" class="melding-plek"></div>
+
+    <!-- ---------- Overzicht ---------- -->
+    <section class="tab actief" id="tab-overzicht">
+      <div class="tegels" id="tegels">
+        <div class="tegel"><div class="tegel-kop">Totaal openstaand</div><div class="tegel-cijfer" id="t-totaal">—</div><div class="tegel-voet" id="t-totaal-voet">&nbsp;</div></div>
+        <div class="tegel"><div class="tegel-kop">Waarvan vervallen</div><div class="tegel-cijfer goud-tekst" id="t-vervallen">—</div><div class="tegel-voet" id="t-vervallen-voet">&nbsp;</div></div>
+        <div class="tegel"><div class="tegel-kop">Openstaande posten</div><div class="tegel-cijfer" id="t-posten">—</div><div class="tegel-voet" id="t-posten-voet">&nbsp;</div></div>
+        <div class="tegel"><div class="tegel-kop">Debiteuren</div><div class="tegel-cijfer" id="t-debiteuren">—</div><div class="tegel-voet" id="t-debiteuren-voet">&nbsp;</div></div>
+      </div>
+
+      <div class="paneel">
+        <h2>Ouderdom</h2>
+        <p class="zacht klein">Gerekend vanaf de vervaldatum. Posten zonder vervaldatum staan onder “Geen vervaldatum”.</p>
+        <div id="ouderdom-staven" class="staven"></div>
+        <div class="tabel-omhulsel">
+          <table id="tabel-ouderdom">
+            <thead><tr><th>Termijn</th><th class="num">Posten</th><th class="num">Bedrag</th><th class="num">Aandeel</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="paneel">
+        <h2>Grootste openstaande debiteuren</h2>
+        <div class="tabel-omhulsel">
+          <table id="tabel-top">
+            <thead><tr><th>Debiteur</th><th class="num">Posten</th><th class="num">Openstaand</th><th class="num">Waarvan vervallen</th><th class="num">Oudste (dagen)</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Debiteuren ---------- -->
+    <section class="tab" id="tab-debiteuren">
+      <div class="paneel">
+        <div class="werkbalk">
+          <input type="search" id="zoek" placeholder="Zoek op debiteur, nummer of factuurnummer…">
+          <select id="sorteer">
+            <option value="dagen">Sorteer: langst openstaand</option>
+            <option value="bedrag">Sorteer: hoogste bedrag</option>
+            <option value="naam">Sorteer: naam A–Z</option>
+            <option value="nummer">Sorteer: debiteurnummer</option>
+          </select>
+          <label class="vink"><input type="checkbox" id="alleen-vervallen"> Alleen vervallen</label>
+          <span class="rek"></span>
+          <button class="knop stil" id="btn-excel-post">Excel · per post</button>
+          <button class="knop stil" id="btn-excel-deb">Excel · per debiteur</button>
+        </div>
+        <div id="lijst-debiteuren" class="groepen"></div>
+      </div>
+    </section>
+
+    <!-- ---------- Aanmaningen ---------- -->
+    <section class="tab" id="tab-aanmaningen">
+      <div class="paneel">
+        <h2>Conceptmails voorbereiden</h2>
+        <p class="zacht klein">De app maakt per debiteur een tekst met zijn eigen openstaande facturen. <b>Er wordt niets verstuurd</b> — je kopieert de tekst of opent hem in je mailprogramma en verstuurt zelf.</p>
+        <div class="werkbalk">
+          <select id="toon-soort">
+            <option value="auto">Niveau automatisch (naar dagen te laat)</option>
+            <option value="herinnering">Vriendelijke herinnering</option>
+            <option value="tweede">Tweede herinnering</option>
+            <option value="aanmaning">Aanmaning</option>
+          </select>
+          <select id="toon-taal">
+            <option value="nl">Nederlands</option>
+            <option value="en">Engels</option>
+          </select>
+          <label class="vink"><input type="checkbox" id="aanm-alleen-vervallen" checked> Alleen vervallen posten opnemen</label>
+          <span class="rek"></span>
+          <button class="knop stil" id="btn-emails">E-mailadressen ophalen uit Twinfield</button>
+          <button class="knop goud" id="btn-maak-aanmaningen">Teksten maken</button>
+        </div>
+        <div id="aanmaning-keuze" class="keuzelijst"></div>
+        <div id="aanmaning-uitkomst"></div>
+        <div id="verstuurbalk" class="match-voet" style="display:none">
+          <div><span id="verstuur-telling"></span> <span class="zacht klein">— zet het vinkje "versturen" uit bij wie geen mail mag krijgen.</span></div>
+          <div class="knoppen">
+            <button class="knop goud" id="btn-verstuur-alles">Versturen via Microsoft 365</button>
+          </div>
+        </div>
+        <div id="melding-verstuur" class="melding-plek"></div>
+      </div>
+    </section>
+
+    <!-- ---------- Afletteren ---------- -->
+    <section class="tab" id="tab-afletteren">
+      <div class="paneel waarschuwing">
+        <h2>Nog niet beproefd</h2>
+        <p class="klein">Afletteren is het enige onderdeel dat <b>in</b> Twinfield schrijft. De opbouw van het match-bericht is gemaakt volgens de Twinfield-documentatie, maar nog niet één keer echt doorgevoerd. Doe de eerste keer één kleine post, en kijk in Twinfield of het klopt. Zolang je op <b>Toon match-bericht</b> klikt, gaat er niets de deur uit.</p>
+      </div>
+      <div class="paneel">
+        <h2>Ontvangsten die nog niet afgeletterd zijn</h2>
+        <p class="zacht klein">Dit zijn openstaande posten met een <b>negatief</b> bedrag: geld dat binnenkwam en nog aan een factuur gehangen moet worden.</p>
+        <div class="tabel-omhulsel">
+          <table id="tabel-ontvangsten">
+            <thead><tr><th></th><th>Debiteur</th><th>Boekstuk</th><th>Datum</th><th class="num">Openstaand</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="paneel" id="paneel-match" style="display:none">
+        <h2>Facturen van <span id="match-debiteur" class="goud-tekst"></span></h2>
+        <div class="tabel-omhulsel">
+          <table id="tabel-match-facturen">
+            <thead><tr><th></th><th>Factuur</th><th>Boekstuk</th><th>Datum</th><th>Vervalt</th><th class="num">Openstaand</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="match-voet">
+          <div>Ontvangst <b id="match-ontvangst">0,00</b> · gekozen facturen <b id="match-facturen">0,00</b> · verschil <b id="match-verschil">0,00</b></div>
+          <div class="knoppen">
+            <button class="knop stil" id="btn-match-xml">Toon match-bericht</button>
+            <button class="knop goud" id="btn-match-door">Doorvoeren in Twinfield</button>
+          </div>
+        </div>
+        <pre id="match-xml" class="code" style="display:none"></pre>
+        <div id="melding-match" class="melding-plek"></div>
+      </div>
+    </section>
+
+    <!-- ---------- Instellingen ---------- -->
+    <section class="tab" id="tab-instellingen">
+      <div class="paneel">
+        <h2>Administratie</h2>
+        <div class="veldenrij">
+          <div class="veld">
+            <label for="in-office">Administratiecode in Twinfield</label>
+            <input type="text" id="in-office" placeholder="ENDURA">
+            <p class="zacht klein">Dit is de code die Twinfield zelf gebruikt (bij Endura: <b>ENDURA</b>). De administratie moet als filter mee bij elke aanroep, anders geeft Twinfield de verkeerde administratie terug.</p>
+          </div>
+          <div class="veld">
+            <label for="in-dagen">Aantal dagen betalingstermijn (als een factuur geen vervaldatum heeft)</label>
+            <input type="number" id="in-dagen" min="0" max="365" placeholder="30">
+          </div>
+        </div>
+      </div>
+      <div class="paneel">
+        <h2>Verbinding</h2>
+        <div class="veld" style="margin-bottom:14px">
+          <label class="vink" style="margin-bottom:8px"><input type="radio" name="verbinding" id="vb-direct" value="direct" checked> <b>Rechtstreeks naar DirectLink</b> — de app praat zelf met secure.directlink.nu, met het token hieronder. Zo werkt het voorbeeld uit het DirectLink-pakket.</label>
+          <label class="vink"><input type="radio" name="verbinding" id="vb-luik" value="luik"> <b>Via het doorgeefluik (Supabase)</b> — het token staat aan de serverkant. Werkt op dit moment niet: de beschermlaag van Supabase houdt XML-berichten uit de browser tegen.</label>
+        </div>
+        <div id="blok-direct">
+          <div class="veldenrij">
+            <div class="veld">
+              <label for="in-dl-endpoint">DirectLink-endpoint</label>
+              <input type="text" id="in-dl-endpoint" placeholder="https://secure.directlink.nu/api/v1/dataimport/upload">
+            </div>
+            <div class="veld">
+              <label for="in-dl-token">Bearer token <label class="vink" style="display:inline-flex"><input type="checkbox" id="in-dl-toon"> toon</label></label>
+              <input type="password" id="in-dl-token" placeholder="plak hier het DirectLink-token" autocomplete="off">
+              <p class="zacht klein">Het token wordt alleen in déze browser bewaard (localStorage) en gaat nergens anders heen dan naar DirectLink zelf. Behandel het als een wachtwoord. Krijg je een CORS-fout, dan moet DirectLink dit adres nog whitelisten — mail het adres uit de foutmelding naar info@directlink.nu.</p>
+            </div>
+          </div>
+        </div>
+        <div class="verbindingsrij">
+          <div><span class="zacht klein">Doorgeefluik</span><div id="in-endpoint" class="mono klein"></div></div>
+          <div><span class="zacht klein">Ingelogd als</span><div id="in-gebruiker" class="mono klein"></div></div>
+        </div>
+        <div class="knoppen">
+          <button class="knop stil" id="btn-toets">Verbinding toetsen (administraties ophalen)</button>
+          <button class="knop stil" id="btn-velden">Beschikbare velden ontdekken (130_3)</button>
+        </div>
+        <div id="melding-toets" class="melding-plek"></div>
+        <div class="tabel-omhulsel" id="veldenlijst"></div>
+      </div>
+      <div class="paneel">
+        <h2>Aanmaningen</h2>
+        <div class="veldenrij">
+          <div class="veld"><label for="in-afzender">Naam onderaan de mail</label><input type="text" id="in-afzender" placeholder="Endura Accounting &amp; Advisory"></div>
+          <div class="veld"><label for="in-antwoord">Antwoordadres</label><input type="email" id="in-antwoord" placeholder="administratie@endura-aruba.com"></div>
+        </div>
+      </div>
+      <div class="paneel">
+        <h2>Opslag</h2>
+        <p class="zacht klein">Instellingen en opgehaalde posten staan alleen in deze browser. Er gaat niets naar een database.</p>
+        <button class="knop stil" id="btn-wis">Alles in deze browser wissen</button>
+      </div>
+    </section>
+
+    <!-- ---------- Logboek ---------- -->
+    <section class="tab" id="tab-logboek">
+      <div class="paneel">
+        <div class="werkbalk">
+          <h2>Logboek</h2>
+          <span class="rek"></span>
+          <button class="knop stil" id="btn-log-kopie">Kopieer alles</button>
+          <button class="knop stil" id="btn-log-wis">Leegmaken</button>
+        </div>
+        <p class="zacht klein">Elke aanroep naar Twinfield met de verstuurde XML en het antwoord. Handig als iets niet werkt: kopieer de betreffende regel en stuur hem door.</p>
+        <div id="logboek"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

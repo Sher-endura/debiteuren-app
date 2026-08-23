@@ -1,0 +1,15 @@
+{
+  "name": "Debiteuren · Endura",
+  "short_name": "Debiteuren",
+  "description": "Openstaande debiteurenposten uit Twinfield, via DirectLink.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1224",
+  "theme_color": "#0b1224",
+  "lang": "nl",
+  "icons": [
+    { "src": "icoon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
