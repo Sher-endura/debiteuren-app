@@ -52,51 +52,73 @@
   --waarschuw-bg:    linear-gradient(165deg, rgba(56,42,12,.55), rgba(24,20,10,.5));
 }
 
-/* ---------- licht thema: wit/grijs met SellSync-blauw ---------- */
+/* ---------- licht thema: naar de SellSync-kleuren ----------
+   Basis: zacht verloop van slate-50 via wit naar blue-50 (zoals het
+   SellSync-inlogscherm). Hoofdkleur: het SellSync-verloop blauw-600 →
+   indigo-600. Vlakken en badges in pasteltinten (blue-50/100, amber-50,
+   teal-50, green-50). "Te laat" is amber→oranje, ook een SellSync-verloop. */
 body.licht {
-  --achtergrond:  #f9fafb;
+  --achtergrond:  linear-gradient(135deg, #f8fafc 0%, #ffffff 45%, #eff6ff 100%);
   --paneel:       #ffffff;
   --paneel-plat:  #ffffff;
   --tegel:        #ffffff;
   --zijbalk:      #ffffff;
   --kaart:        #ffffff;
   --veld:         #ffffff;
-  --rand:         #d1d5db;
-  --rand-zacht:   #e5e7eb;
-  --tekst:        #1f2937;
-  --zacht:        #6b7280;
+  --rand:         #cbd5e1;
+  --rand-zacht:   #e2e8f0;
+  --tekst:        #1e293b;
+  --zacht:        #64748b;
   --kop-donker:   #1e3a8a;
+  --kop-kleur:    #1d4ed8;                 /* blue-700 voor kopjes */
 
-  --accent:        #2563eb;
-  --accent-diep:   #1d4ed8;
+  --accent:        #2563eb;                 /* blue-600 */
+  --accent-diep:   #4f46e5;                 /* indigo-600 → hét SellSync-verloop */
   --accent-tekst:  #ffffff;
-  --accent-gloed:  rgba(37,99,235,.35);
-  --accent-zweem:  rgba(37,99,235,.10);
+  --accent-gloed:  rgba(37,99,235,.30);
+  --accent-zweem:  #eff6ff;                 /* blue-50 */
 
-  --laat:          #d97706;
-  --laat-rand:     rgba(217,119,6,.5);
+  --laat:          #b45309;                 /* amber-700, leesbaar op pastel */
+  --laat-rand:     #fcd34d;                 /* amber-300 */
+  --laat-zweem:    #fffbeb;                 /* amber-50 */
 
-  --blauw:        #2563eb;
-  --blauw-diep:   #1d4ed8;
+  --blauw:        #3b82f6;
+  --blauw-diep:   #6366f1;
   --rood:         #dc2626;
   --groen:        #16a34a;
 
-  --hover:        rgba(37,99,235,.08);
-  --rij-hover:    rgba(37,99,235,.05);
-  --baan:         #e5e7eb;
-  --groep-bg:     #ffffff;
-  --groep-kop:    #f3f4f6;
-  --groep-kop-h:  #e8edf5;
-  --code-bg:      #f3f4f6;
-  --code-tekst:   #374151;
-  --focusring:    rgba(37,99,235,.15);
+  --staaf:        linear-gradient(90deg, #3b82f6, #6366f1);   /* blauw → indigo */
+  --staaf-laat:   linear-gradient(90deg, #f59e0b, #f97316);   /* amber → oranje */
 
-  --melding-ok-r:    rgba(22,163,74,.4);   --melding-ok-bg:    rgba(22,163,74,.08);
-  --melding-fout-r:  rgba(220,38,38,.4);   --melding-fout-bg:  rgba(220,38,38,.07);
-  --melding-bezig-r: rgba(37,99,235,.35);  --melding-bezig-bg: rgba(37,99,235,.07);
-  --waarschuw-rand:  rgba(217,119,6,.45);
-  --waarschuw-bg:    #fffbeb;
+  --hover:        #eff6ff;                  /* blue-50 */
+  --rij-hover:    #f0f6ff;
+  --baan:         #e2e8f0;
+  --groep-bg:     #ffffff;
+  --groep-kop:    #f8fafc;
+  --groep-kop-h:  #eff6ff;
+  --code-bg:      #f8fafc;
+  --code-tekst:   #334155;
+  --focusring:    #dbeafe;                  /* blue-100 */
+
+  --melding-ok-r:    #bbf7d0;  --melding-ok-bg:    #f0fdf4;   /* green-200 / green-50 */
+  --melding-fout-r:  #fecaca;  --melding-fout-bg:  #fef2f2;   /* red-200 / red-50 */
+  --melding-bezig-r: #bfdbfe;  --melding-bezig-bg: #eff6ff;   /* blue-200 / blue-50 */
+  --waarschuw-rand:  #fcd34d;
+  --waarschuw-bg:    #fffbeb;                                  /* amber-50 */
 }
+
+/* Pastel-tegels op het overzicht, zoals de gekleurde vlakken in SellSync:
+   totaal = blauw, vervallen = amber, posten = teal, debiteuren = groen. */
+body.licht .tegel:nth-child(1) { background: #eff6ff; border-color: #bfdbfe; }
+body.licht .tegel:nth-child(2) { background: #fffbeb; border-color: #fde68a; }
+body.licht .tegel:nth-child(3) { background: #f0fdfa; border-color: #99f6e4; }
+body.licht .tegel:nth-child(4) { background: #f0fdf4; border-color: #bbf7d0; }
+body.licht .tegel:nth-child(1) .tegel-kop { color: #1d4ed8; }
+body.licht .tegel:nth-child(2) .tegel-kop { color: #b45309; }
+body.licht .tegel:nth-child(3) .tegel-kop { color: #0f766e; }
+body.licht .tegel:nth-child(4) .tegel-kop { color: #15803d; }
+body.licht .zijbalk { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); }
+body.licht th { color: #475569; }
 
 * { box-sizing: border-box; }
 
@@ -109,7 +131,7 @@ body {
 }
 
 h1 { font-size: 22px; margin: 0; font-weight: 600; letter-spacing: .2px; }
-h2 { font-size: 15px; margin: 0 0 4px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; color: var(--accent); }
+h2 { font-size: 15px; margin: 0 0 4px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; color: var(--kop-kleur, var(--accent)); }
 p  { margin: 4px 0 0; }
 .zacht { color: var(--zacht); }
 .klein { font-size: 13px; }
@@ -225,8 +247,8 @@ td.naam { white-space: normal; min-width: 180px; }
 .staven { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
 .staaf-rij { display: grid; grid-template-columns: 148px 1fr 110px; gap: 12px; align-items: center; font-size: 13px; }
 .staaf-baan { background: var(--baan); border-radius: 6px; height: 14px; overflow: hidden; }
-.staaf-vul { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--blauw-diep), var(--blauw)); }
-.staaf-rij.laat .staaf-vul { background: linear-gradient(90deg, var(--laat), var(--laat)); opacity: .9; }
+.staaf-vul { height: 100%; border-radius: 6px; background: var(--staaf, linear-gradient(90deg, var(--blauw-diep), var(--blauw))); }
+.staaf-rij.laat .staaf-vul { background: var(--staaf-laat, var(--laat)); }
 .staaf-rij .num { color: var(--zacht); }
 
 /* ---------- groepen per debiteur ---------- */
@@ -242,7 +264,7 @@ td.naam { white-space: normal; min-width: 180px; }
 .groep-naam small { display: block; font-weight: 400; color: var(--zacht); font-size: 12px; }
 .groep-bedrag { font-variant-numeric: tabular-nums; font-weight: 600; }
 .groep-merk { font-size: 12px; padding: 2px 9px; border-radius: 20px; border: 1px solid var(--rand); color: var(--zacht); }
-.groep-merk.laat { border-color: var(--laat-rand); color: var(--laat); }
+.groep-merk.laat { border-color: var(--laat-rand); color: var(--laat); background: var(--laat-zweem, transparent); }
 .groep-inhoud { display: none; padding: 0 14px 12px; }
 .groep.open .groep-inhoud { display: block; }
 .dagen-laat { color: var(--laat); font-weight: 600; }
