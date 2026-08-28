@@ -160,29 +160,29 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
     <section class="tab" id="tab-afletteren">
       <div class="paneel waarschuwing">
         <h2>Nog niet beproefd</h2>
-        <p class="klein">Afletteren is het enige onderdeel dat <b>in</b> Twinfield schrijft. De opbouw van het match-bericht is gemaakt volgens de Twinfield-documentatie, maar nog niet één keer echt doorgevoerd. Doe de eerste keer één kleine post, en kijk in Twinfield of het klopt. Zolang je op <b>Toon match-bericht</b> klikt, gaat er niets de deur uit.</p>
+        <p class="klein">Afletteren is het enige onderdeel dat <b>in</b> Twinfield schrijft. De opbouw van het match-bericht volgt de Twinfield-documentatie, maar is nog niet één keer echt doorgevoerd. Doe de eerste keer één kleine post en kijk in Twinfield of het klopt. Zolang je op <b>Toon match-bericht</b> klikt, gaat er niets de deur uit.</p>
       </div>
       <div class="paneel">
-        <h2>Ontvangsten die nog niet afgeletterd zijn</h2>
-        <p class="zacht klein">Dit zijn openstaande posten met een <b>negatief</b> bedrag: geld dat binnenkwam en nog aan een factuur gehangen moet worden. Je kunt er <b>meerdere tegelijk</b> aanvinken (bijvoorbeeld een ontvangst én een afboekregel), zolang ze van dezelfde debiteur zijn.</p>
-        <div class="tabel-omhulsel">
-          <table id="tabel-ontvangsten">
-            <thead><tr><th></th><th>Debiteur</th><th>Boekstuk</th><th>Datum</th><th class="num">Openstaand</th></tr></thead>
-            <tbody></tbody>
-          </table>
+        <h2>1 · Kies een debiteur</h2>
+        <div class="werkbalk">
+          <select id="match-klant" style="min-width:340px"></select>
+          <label class="vink"><input type="checkbox" id="match-alleen-ontvangst" checked> Alleen debiteuren met een openstaande ontvangst</label>
         </div>
+        <p class="zacht klein">Zet het vinkje uit om álle debiteuren met openstaande posten te zien — bijvoorbeeld om twee facturen tegen een creditnota af te letteren.</p>
       </div>
       <div class="paneel" id="paneel-match" style="display:none">
-        <h2>Facturen van <span id="match-debiteur" class="goud-tekst"></span></h2>
+        <h2>2 · Vink aan wat tegen elkaar wegvalt</h2>
+        <p class="zacht klein">Alle openstaande posten van <b id="match-debiteur"></b>. Facturen staan positief, ontvangsten en creditnota's negatief. Het bedrag mag je aanpassen voor een <b>deelbetaling</b> — het gekozen totaal moet op <b>nul</b> uitkomen.</p>
         <div class="tabel-omhulsel">
-          <table id="tabel-match-facturen">
-            <thead><tr><th></th><th>Factuur</th><th>Boekstuk</th><th>Datum</th><th>Vervalt</th><th class="num">Openstaand</th></tr></thead>
+          <table id="tabel-match">
+            <thead><tr><th></th><th>Soort</th><th>Factuur / boekstuk</th><th>Datum</th><th>Vervalt</th><th class="num">Openstaand</th><th class="num">Af te letteren</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="match-voet">
-          <div>Creditposten <b id="match-ontvangst">0,00</b> · gekozen facturen <b id="match-facturen">0,00</b> · verschil <b id="match-verschil">0,00</b> <span class="zacht klein">(moet nul zijn)</span></div>
+          <div>Gekozen: <b id="match-aantal">0</b> posten · facturen <b id="match-facturen">0,00</b> · ontvangsten <b id="match-ontvangst">0,00</b> · verschil <b id="match-verschil">0,00</b> <span class="zacht klein">(moet nul zijn)</span></div>
           <div class="knoppen">
+            <button class="knop stil" id="btn-match-alles">Alles aanvinken</button>
             <button class="knop stil" id="btn-match-xml">Toon match-bericht</button>
             <button class="knop goud" id="btn-match-door">Doorvoeren in Twinfield</button>
           </div>
