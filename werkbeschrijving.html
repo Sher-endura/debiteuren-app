@@ -25,7 +25,7 @@
 <div class="wb">
   <div class="merk"><span class="merk-punt"></span> Endura</div>
   <h1>Debiteuren — werkbeschrijving</h1>
-  <p class="onder">Voor Antoine · versie 23 augustus 2026</p>
+  <p class="onder">Voor Antoine · versie 28 augustus 2026</p>
 
   <p>Dit programma haalt de <b>openstaande debiteurenposten van ENDURA rechtstreeks uit Twinfield</b>, laat zien wie te laat is, maakt aanmaningsteksten en verstuurt die — na jouw controle — in één keer vanuit <b>administratie@endura-aruba.com</b>. Er wordt nooit iets verstuurd zonder dat jij op de knop drukt en de samenvatting bevestigt.</p>
 
@@ -37,7 +37,7 @@
         <tr><td><b>De app</b></td><td>In E-Board: menuknop <b>“Debiteuren”</b></td><td>Alleen jij en Shereen zien de knop en kunnen inloggen</td></tr>
         <tr><td><b>Inloggen</b></td><td>Zelfde e-mailadres en wachtwoord als <b>E-Board</b></td><td>Eén keer per computer; daarna blijf je ingelogd</td></tr>
         <tr><td><b>Verzendmailbox</b></td><td>administratie@endura-aruba.com — staat vanzelf in jouw Outlook</td><td>Aanmaningen vertrekken hieruit; antwoorden van klanten komen hier binnen</td></tr>
-        <tr><td><b>DirectLink-token</b></td><td>secure.directlink.nu → Imports → Definities → “Endura Proxy (Bankboeker + Debiteuren)”</td><td>Sleutel tot Twinfield — behandel als een wachtwoord</td></tr>
+        <tr><td><b>Verbinding met Twinfield</b></td><td>Loopt via een doorgeefluik bij Supabase; de sleutel staat daar in de kluis</td><td>Niets in te stellen — geen token in je browser</td></tr>
         <tr><td><b>Cijfers</b></td><td>Live uit Twinfield, administratie ENDURA</td><td>Zo vers als je laatste “Ophalen”</td></tr>
       </tbody>
     </table></div>
@@ -47,11 +47,10 @@
     <h2>2 · Eenmalig instellen (eerste keer op een computer)</h2>
     <ol>
       <li>Open de app via de knop in E-Board en log in met je E-Board-gegevens.</li>
-      <li>Ga naar <b>Instellingen</b> en plak bij <b>Verbinding → Bearer token</b> het DirectLink-token (zie hierboven; vraag het anders aan Shereen — nooit per mail of WhatsApp doorsturen).</li>
       <li>Zet bij <b>Instellingen → Aanmaningen</b> de naam op “Administratie Endura” en het antwoordadres op administratie@endura-aruba.com.</li>
-      <li>Klik <b>Verbinding toetsen</b> — er hoort te staan dat ENDURA gevonden is.</li>
+      <li>Klik rechtsboven op <b>Ophalen uit Twinfield</b> — na een paar seconden staan de posten er.</li>
     </ol>
-    <p class="zacht klein">Deze instellingen gelden per computer/browser; op een nieuwe computer doe je dit dus opnieuw.</p>
+    <p class="zacht klein">Meer is er niet: de verbinding met Twinfield zit aan de serverkant. Je hoeft <b>geen token te plakken</b>.</p>
   </div>
 
   <div class="paneel">
@@ -62,8 +61,8 @@
         <tr><td><b>Overzicht</b></td><td>Totalen, ouderdomsverdeling (hoe lang staat het open) en de grootste openstaande debiteuren.</td></tr>
         <tr><td><b>Debiteuren</b></td><td>Alle posten per klant, uitklapbaar. Zoeken, sorteren, filteren op vervallen. Excel-knoppen voor een rapport per post of per debiteur.</td></tr>
         <tr><td><b>Aanmaningen</b></td><td>Teksten maken en versturen — zie hoofdstuk 4.</td></tr>
-        <tr><td><b>Afletteren</b></td><td>Ontvangsten aan facturen koppelen in Twinfield. <b>Let op:</b> zie hoofdstuk 5.</td></tr>
-        <tr><td><b>Instellingen</b></td><td>Token, administratie, afzender van de aanmaningen — en deze werkbeschrijving.</td></tr>
+        <tr><td><b>Afletteren</b></td><td>Openstaande posten van één debiteur tegen elkaar wegstrepen (ook deels). <b>Let op:</b> zie hoofdstuk 5.</td></tr>
+        <tr><td><b>Instellingen</b></td><td>Administratie, afzender van de aanmaningen — en deze werkbeschrijving.</td></tr>
         <tr><td><b>Logboek</b></td><td>Alles wat de app naar Twinfield stuurde en terugkreeg. Nodig als iets niet werkt.</td></tr>
       </tbody>
     </table></div>
@@ -81,11 +80,23 @@
     <p>Na afloop staan de mails in de <b>Verzonden items van administratie@</b> en zijn de vinkjes automatisch uitgezet, zodat een tweede klik niemand dubbel aanmaant.</p>
   </div>
 
+  <div class="paneel">
+    <h2>4b · Afletteren, stap voor stap</h2>
+    <ol>
+      <li><b>Kies een debiteur</b> in de keuzelijst. Standaard staan er alleen debiteuren met een openstaande ontvangst; zet dat vinkje uit om ze allemaal te zien.</li>
+      <li>Je ziet nu <b>alle openstaande posten van die klant</b>: facturen positief, ontvangsten en creditnota's negatief.</li>
+      <li><b>Vink aan wat tegen elkaar wegvalt.</b> Achter elke regel staat het bedrag; dat mag je verlagen voor een <b>deelbetaling</b> (bijvoorbeeld 3.000 van een factuur van 8.000).</li>
+      <li>Kijk naar <b>verschil</b> onderaan: dat moet <b>0,00</b> zijn en groen worden. Zolang dat niet zo is, blijft Doorvoeren geblokkeerd — Twinfield accepteert alleen een sluitende match.</li>
+      <li><b>Toon match-bericht</b> laat zien wat er verstuurd zou worden, zonder iets te doen. <b>Doorvoeren in Twinfield</b> schrijft het echt weg, na een bevestiging.</li>
+    </ol>
+    <p class="zacht klein">Afletteren verandert geen bedragen: het merkt posten aan als vereffend, zodat ze uit de openstaande lijst verdwijnen.</p>
+  </div>
+
   <div class="paneel waarschuwing">
     <h2>5 · Waar je voorzichtig mee moet zijn</h2>
     <ul>
       <li><b>Afletteren is nog nooit in het echt gebruikt.</b> Het is het enige onderdeel dat ín Twinfield schrijft. De eerste keer: één kleine post, samen met Shereen, en daarna in Twinfield controleren. Met “Toon match-bericht” kijk je altijd eerst zonder dat er iets verstuurd wordt.</li>
-      <li><b>Het token is een sleutel tot alle Twinfield-gegevens.</b> Nooit doorsturen; bij twijfel of een lek kan DirectLink hem intrekken (info@directlink.nu, +599 9 724 80 00).</li>
+      <li><b>Deelbetalingen:</b> verlaag het bedrag achter de regel, niet het bedrag van de factuur zelf. De app laat nooit meer afletteren dan er openstaat.</li>
       <li>De cijfers zijn een momentopname van je laatste “Ophalen” — ververs vóór je gaat aanmanen.</li>
       <li>Maximaal 100 aanmaningen per verstuurronde (bewuste rem).</li>
     </ul>
@@ -95,7 +106,7 @@
     <h2>6 · Als iets niet werkt</h2>
     <ul>
       <li><b>“Je bent niet (meer) ingelogd”</b> → pagina verversen en opnieuw inloggen.</li>
-      <li><b>“Plak eerst het DirectLink-token”</b> → je zit op een computer waar het token nog niet is ingesteld (hoofdstuk 2).</li>
+      <li><b>Ophalen mislukt</b> → probeer het na een minuut nog eens; blijft het misgaan, stuur dan het Logboek aan Shereen (de verbinding zit aan de serverkant, dus daar is niets aan te zetten).</li>
       <li><b>Versturen mislukt</b> of iets anders geks → tabblad <b>Logboek</b> → knop <b>“Kopieer alles”</b> → stuur het aan Shereen. Daar staat precies wat er misging.</li>
       <li>De app toont oude cijfers na een wijziging → tabblad sluiten en opnieuw openen.</li>
     </ul>
