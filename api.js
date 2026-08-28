@@ -104,12 +104,16 @@ async function dlVerstuur(xml, watVoor) {
       if (!CLOUD) throw new Error("Geen verbinding ingesteld (config.js is leeg).");
       const { data: { session } } = await sb.auth.getSession();
       if (!session) throw new Error("Je bent niet meer ingelogd — ververs de pagina en log opnieuw in.");
-      // JSON, niet rauwe XML: rauwe XML wordt door de beschermlaag van Supabase
-      // tegengehouden. Het token gaat alleen mee zolang de kluis het nog niet heeft.
+      // De XML gaat als base64 mee: de beschermlaag van Supabase blokkeert elk
+      // verzoek met punthaken erin, óók binnen een JSON-veld. Het token gaat
+      // alleen mee zolang de kluis het nog niet heeft.
       resp = await fetch(`${CFG.FUNCTIES_URL || CFG.SUPABASE_URL}/functions/v1/twinfield-proxy`, {
         method: "POST",
         headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/json" },
-        body: JSON.stringify({ xml, token: (inst.dlToken || "").trim().replace(/^bearer\s+/i, "") })
+        body: JSON.stringify({
+          xml_b64: naarBase64(xml),
+          token: (inst.dlToken || "").trim().replace(/^bearer\s+/i, "")
+        })
       });
     }
     raw = await resp.text();
@@ -142,6 +146,15 @@ async function dlLees(xml, watVoor) {
   if (doc.getElementsByTagName("parsererror").length)
     throw new Error("Het antwoord was geen geldige XML: " + xmlTekst.slice(0, 200));
   return doc;
+}
+
+/* Tekst naar base64, ook als er accenten of andere niet-ASCII in staan
+   (btoa alleen zou daarop stukbreken). */
+function naarBase64(tekst) {
+  const bytes = new TextEncoder().encode(tekst);
+  let ruw = "";
+  for (const b of bytes) ruw += String.fromCharCode(b);
+  return btoa(ruw);
 }
 
 function xmlEsc(s) {
