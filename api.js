@@ -104,9 +104,9 @@ async function dlVerstuur(xml, watVoor) {
       if (!CLOUD) throw new Error("Geen verbinding ingesteld (config.js is leeg).");
       const { data: { session } } = await sb.auth.getSession();
       if (!session) throw new Error("Je bent niet meer ingelogd — ververs de pagina en log opnieuw in.");
-      // De XML gaat als base64 mee: de beschermlaag van Supabase blokkeert elk
-      // verzoek met punthaken erin, óók binnen een JSON-veld. Het token gaat
-      // alleen mee zolang de kluis het nog niet heeft.
+      // De XML gaat als base64 mee, zodat de inhoud onderweg nergens als opmaak
+      // kan worden aangezien. Het token gaat alleen mee zolang de kluis het niet
+      // heeft; staat het daar, dan hoeft geen enkele browser het te kennen.
       resp = await fetch(`${CFG.FUNCTIES_URL || CFG.SUPABASE_URL}/functions/v1/twinfield-proxy`, {
         method: "POST",
         headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/json" },
