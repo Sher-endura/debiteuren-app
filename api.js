@@ -86,8 +86,11 @@ function maakEndpoint(ingevoerd) {
 async function dlVerstuur(xml, watVoor) {
   const begin = performance.now();
   let resp, raw, bron;
+  // Op een echt internetadres kan de browser DirectLink niet rechtstreeks
+  // aanroepen (CORS); dan altijd via het doorgeefluik, ongeacht de keuze.
+  const moetViaLuik = inst.verbinding === "luik" || !/^(localhost|127\.0\.0\.1)/.test(location.hostname);
   try {
-    if (inst.verbinding !== "luik") {
+    if (!moetViaLuik) {
       bron = "DirectLink";
       const token = (inst.dlToken || "").trim().replace(/^bearer\s+/i, "");
       if (!token) throw new Error("Plak eerst het DirectLink-token op het tabblad Instellingen (blok Verbinding).");
@@ -101,10 +104,12 @@ async function dlVerstuur(xml, watVoor) {
       if (!CLOUD) throw new Error("Geen verbinding ingesteld (config.js is leeg).");
       const { data: { session } } = await sb.auth.getSession();
       if (!session) throw new Error("Je bent niet meer ingelogd — ververs de pagina en log opnieuw in.");
-      resp = await fetch(`${CFG.FUNCTIES_URL || CFG.SUPABASE_URL}/functions/v1/directlink`, {
+      // JSON, niet rauwe XML: rauwe XML wordt door de beschermlaag van Supabase
+      // tegengehouden. Het token gaat alleen mee zolang de kluis het nog niet heeft.
+      resp = await fetch(`${CFG.FUNCTIES_URL || CFG.SUPABASE_URL}/functions/v1/twinfield-proxy`, {
         method: "POST",
-        headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/xml" },
-        body: xml
+        headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/json" },
+        body: JSON.stringify({ xml, token: (inst.dlToken || "").trim().replace(/^bearer\s+/i, "") })
       });
     }
     raw = await resp.text();
