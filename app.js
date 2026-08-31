@@ -624,6 +624,80 @@ function maakAanmaningen() {
   vernieuwVerstuurbalk();
 }
 
+/* ------------------ hoofdschakelaar voor de aanmaningen ------------------
+   De stand staat aan de serverkant (tabel app_instellingen), zodat hij voor
+   alle gebruikers geldt en de verstuurfunctie zelf kan weigeren. */
+
+let schakelaarAan = null;   // null = nog niet bekend
+
+async function roepSchakelaar(body) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) throw new Error("Je bent niet meer ingelogd — ververs de pagina.");
+  const resp = await fetch(`${CFG.FUNCTIES_URL || CFG.SUPABASE_URL}/functions/v1/aanmaningen-schakelaar`, {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const raw = await resp.text();
+  let j = null; try { j = JSON.parse(raw); } catch (e) {}
+  if (resp.status === 404) throw new Error("De schakelaarfunctie staat nog niet bij Supabase.");
+  if (!resp.ok) throw new Error((j && j.fout) || `HTTP ${resp.status}: ${raw.slice(0, 160)}`);
+  return j;
+}
+
+function toonSchakelaar(stand) {
+  const paneel = document.getElementById("paneel-schakelaar");
+  const knop = document.getElementById("btn-schakelaar");
+  const standTekst = document.getElementById("schakel-stand");
+  const wie = document.getElementById("schakel-wie");
+
+  if (!stand) {
+    paneel.className = "paneel schakelpaneel";
+    standTekst.textContent = "Stand onbekend";
+    knop.disabled = true; knop.className = "knop groot"; knop.textContent = "…";
+    return;
+  }
+  schakelaarAan = stand.aan;
+  paneel.className = "paneel schakelpaneel " + (stand.aan ? "aan" : "uit");
+  standTekst.textContent = stand.aan ? "✅ Aanmaningen staan AAN" : "⛔ Aanmaningen zijn STILGEZET";
+  wie.innerHTML = stand.gewijzigd_door
+    ? `Laatst gewijzigd door ${escapeHtml(stand.gewijzigd_door)}${stand.gewijzigd_op ? " op " + new Date(stand.gewijzigd_op).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" }) : ""}`
+    : "&nbsp;";
+  knop.disabled = false;
+  knop.className = "knop groot " + (stand.aan ? "stop" : "start");
+  knop.textContent = stand.aan ? "⛔ Stilzetten" : "▶ Activeren";
+  // Versturen kan alleen als de schakelaar aan staat.
+  vernieuwVerstuurbalk();
+}
+
+async function haalSchakelaar() {
+  try { toonSchakelaar(await roepSchakelaar({ actie: "lees" })); }
+  catch (e) {
+    toonSchakelaar(null);
+    document.getElementById("schakel-stand").textContent = "Stand niet op te halen";
+    document.getElementById("schakel-wie").textContent = e.message;
+  }
+}
+
+async function zetSchakelaar() {
+  const naarAan = !schakelaarAan;
+  const vraag = naarAan
+    ? "Aanmaningen ACTIVEREN?\n\nDaarna kan er weer verstuurd worden — nog altijd alleen nadat iemand op Versturen klikt en de samenvatting bevestigt."
+    : "Aanmaningen STILZETTEN?\n\nEr kan dan door niemand meer verstuurd worden, ook niet door Antoine, totdat je hem weer activeert.";
+  if (!confirm(vraag)) return;
+
+  const knop = document.getElementById("btn-schakelaar");
+  knop.disabled = true; knop.textContent = "Bezig…";
+  try {
+    toonSchakelaar(await roepSchakelaar({ actie: "zet", aan: naarAan }));
+    toonMelding("melding-verstuur", naarAan ? "ok" : "fout",
+      naarAan ? "De aanmaningen staan weer aan." : "De aanmaningen zijn stilgezet — er kan nu niets verstuurd worden.");
+  } catch (e) {
+    await haalSchakelaar();
+    toonMelding("melding-verstuur", "fout", "Omzetten mislukt: " + escapeHtml(e.message));
+  }
+}
+
 /* --------------------- versturen via Microsoft 365 ---------------------- */
 
 /* De brieven die daadwerkelijk de deur uit zouden gaan: vinkje aan én een
@@ -646,8 +720,11 @@ function vernieuwVerstuurbalk() {
   const zonder = alle.length - met.length;
   document.getElementById("verstuur-telling").innerHTML =
     `<b>${met.length}</b> aanmaning${met.length === 1 ? "" : "en"} klaar om te versturen` +
-    (zonder ? ` · <span class="goud-tekst">${zonder} zonder e-mailadres (die gaan niet mee)</span>` : "");
-  document.getElementById("btn-verstuur-alles").disabled = !met.length;
+    (zonder ? ` · <span class="goud-tekst">${zonder} zonder e-mailadres (die gaan niet mee)</span>` : "") +
+    (schakelaarAan === false ? ` · <span class="goud-tekst">de hoofdschakelaar staat uit</span>` : "");
+  const knop = document.getElementById("btn-verstuur-alles");
+  knop.disabled = !met.length || schakelaarAan !== true;
+  knop.title = schakelaarAan !== true ? "De hoofdschakelaar staat uit — activeer hem bovenaan dit tabblad." : "";
 }
 
 async function verstuurAlles() {
@@ -673,6 +750,11 @@ async function verstuurAlles() {
     let j = null;
     try { j = JSON.parse(raw); } catch (e) { /* geen JSON */ }
     if (resp.status === 404) throw new Error("De verstuurfunctie staat nog niet bij Supabase — zie AZURE-MAIL-INSTRUCTIES.md voor de eenmalige inrichting.");
+    if (resp.status === 423 || (j && j.stilgezet)) {
+      // De server heeft geweigerd omdat de hoofdschakelaar uit staat.
+      await haalSchakelaar();
+      throw new Error("De aanmaningen staan stilgezet. Activeer de hoofdschakelaar bovenaan dit tabblad en probeer het opnieuw.");
+    }
     if (!resp.ok) throw new Error((j && j.fout) || `HTTP ${resp.status}: ${raw.slice(0, 200)}`);
 
     const uitkomsten = (j && j.uitkomsten) || [];
@@ -1026,6 +1108,7 @@ document.getElementById("aanm-alleen-vervallen").addEventListener("change", vern
 document.getElementById("btn-maak-aanmaningen").addEventListener("click", maakAanmaningen);
 document.getElementById("btn-emails").addEventListener("click", haalEmails);
 document.getElementById("btn-verstuur-alles").addEventListener("click", verstuurAlles);
+document.getElementById("btn-schakelaar").addEventListener("click", zetSchakelaar);
 
 document.getElementById("match-klant").addEventListener("change", (e) => {
   matchKeuze = { klant: e.target.value || null, bedragen: new Map() };
@@ -1153,5 +1236,6 @@ document.getElementById("btn-log-wis").addEventListener("click", () => { logrege
   vernieuwAlles();
   const start = (location.hash || "").replace("#", "");
   naarTab(TAB_TITELS[start] ? start : "overzicht");
+  haalSchakelaar();   // stand van de hoofdschakelaar ophalen (mag op de achtergrond)
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();

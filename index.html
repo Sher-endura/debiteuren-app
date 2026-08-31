@@ -125,6 +125,17 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
 
     <!-- ---------- Aanmaningen ---------- -->
     <section class="tab" id="tab-aanmaningen">
+      <div class="paneel schakelpaneel" id="paneel-schakelaar">
+        <div class="schakelrij">
+          <div>
+            <h2>Hoofdschakelaar</h2>
+            <div class="schakelstand" id="schakel-stand">Stand ophalen…</div>
+            <p class="zacht klein" id="schakel-wie">&nbsp;</p>
+          </div>
+          <button class="knop groot" id="btn-schakelaar" disabled>…</button>
+        </div>
+        <p class="zacht klein">Staat deze uit, dan gaat er <b>niets</b> de deur uit — ook niet per ongeluk. De stand geldt voor iedereen: zet Shereen hem uit, dan kan Antoine ook niet versturen. Teksten maken en nakijken kan altijd.</p>
+      </div>
       <div class="paneel">
         <h2>Conceptmails voorbereiden</h2>
         <p class="zacht klein">De app maakt per debiteur een tekst met zijn eigen openstaande facturen. <b>Er wordt niets verstuurd</b> — je kopieert de tekst of opent hem in je mailprogramma en verstuurt zelf.</p>

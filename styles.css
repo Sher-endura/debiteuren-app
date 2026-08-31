@@ -287,6 +287,20 @@ td.naam { white-space: normal; min-width: 180px; }
 .brief textarea { width: 100%; border: 0; border-top: 1px solid var(--rand-zacht); border-radius: 0; min-height: 240px; font-family: "Cascadia Mono", Consolas, monospace; font-size: 13px; resize: vertical; }
 .brief input.email { min-width: 220px; }
 
+/* ---------- hoofdschakelaar aanmaningen ---------- */
+.schakelpaneel { border-width: 2px; }
+.schakelpaneel.aan  { border-color: var(--groen); }
+.schakelpaneel.uit  { border-color: var(--laat-rand); background: var(--waarschuw-bg); }
+.schakelrij { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.schakelrij > div:first-child { flex: 1; min-width: 220px; }
+.schakelstand { font-size: 21px; font-weight: 600; margin-top: 4px; }
+.schakelpaneel.aan .schakelstand { color: var(--groen); }
+.schakelpaneel.uit .schakelstand { color: var(--laat); }
+.knop.groot { padding: 14px 26px; font-size: 15px; font-weight: 600; }
+.knop.stop  { background: linear-gradient(135deg, var(--laat), var(--laat)); border-color: var(--laat); color: #fff; }
+.knop.start { background: linear-gradient(135deg, var(--groen), var(--groen)); border-color: var(--groen); color: #fff; }
+.knop.stop:hover:not(:disabled), .knop.start:hover:not(:disabled) { filter: brightness(1.08); }
+
 /* ---------- afletteren ---------- */
 .match-voet { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 14px; border-top: 1px solid var(--rand-zacht); padding-top: 14px; }
 .match-voet .knoppen { margin: 0 0 0 auto; }
