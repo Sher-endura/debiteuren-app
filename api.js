@@ -41,8 +41,13 @@ async function initAuth() {
     if (event === "SIGNED_IN" && document.getElementById("login-overlay").style.display !== "none") location.reload();
     if (event === "SIGNED_OUT") location.reload();
   });
+  const doorgeefFout = await doorgeefbriefjeInwisselen();
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { document.getElementById("login-overlay").style.display = "flex"; return false; }
+  if (!session) {
+    document.getElementById("login-overlay").style.display = "flex";
+    if (doorgeefFout) toonMelding("melding-login", "fout", escapeHtml(doorgeefFout));
+    return false;
+  }
 
   gebruiker = session.user;
   const mail = (gebruiker.email || "").toLowerCase();
@@ -57,6 +62,28 @@ async function initAuth() {
     return false;
   }
   return true;
+}
+
+/* Geopend vanuit E-Board (E-Board update 145): het adres eindigt op #doorgeven=<code>.
+   Die eenmalige code (60 s) ruilen we bij edge function `doorgeven` in het E-Board-project
+   in voor een inlog. Die functie laat ALLEEN Shereen en Antoine door; hierboven controleert
+   de app dat daarna nog eens (TOEGESTANE_ACCOUNTS). De code gaat meteen uit de adresbalk. */
+async function doorgeefbriefjeInwisselen() {
+  const m = location.hash.match(/doorgeven=([^&]+)/);
+  if (!m) return null;
+  history.replaceState(null, "", location.pathname + location.search);
+  try {
+    const r = await fetch(`${CFG.SUPABASE_URL}/functions/v1/doorgeven`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actie: "inwisselen", code: decodeURIComponent(m[1]) }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.token_hash) return j.fout || `Inloggen via E-Board lukte niet (HTTP ${r.status}).`;
+    const { error } = await sb.auth.verifyOtp({ token_hash: j.token_hash, type: "magiclink" });
+    return error ? "Inloggen via E-Board lukte niet: " + error.message : null;
+  } catch (e) {
+    return "Inloggen via E-Board lukte niet: " + e.message;
+  }
 }
 
 /* ------------------------------------------------------- aanroep versturen */

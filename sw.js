@@ -3,7 +3,7 @@
    bewaard door de service worker: elke aanroep naar het doorgeefluik gaat
    rechtstreeks naar het netwerk. */
 
-const CACHE = "debiteuren-endura-v2";
+const CACHE = "debiteuren-endura-v3";   // v3: openen vanuit E-Board (doorgeven), 10 okt 2026
 const OMHULSEL = ["./", "index.html", "styles.css", "api.js", "app.js", "config.js", "manifest.json", "icoon.svg", "werkbeschrijving.html"];
 
 self.addEventListener("install", (e) => {
