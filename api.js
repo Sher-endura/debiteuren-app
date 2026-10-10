@@ -45,7 +45,8 @@ async function initAuth() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
     document.getElementById("login-overlay").style.display = "flex";
-    if (doorgeefFout) toonMelding("melding-login", "fout", escapeHtml(doorgeefFout));
+    if (doorgeefFout === "BEZIG") toonMelding("melding-login", "ok", "Bezig met inloggen via E-Board…");
+    else if (doorgeefFout) toonMelding("melding-login", "fout", escapeHtml(doorgeefFout));
     return false;
   }
 
@@ -72,18 +73,35 @@ async function doorgeefbriefjeInwisselen() {
   const m = location.hash.match(/doorgeven=([^&]+)/);
   if (!m) return null;
   history.replaceState(null, "", location.pathname + location.search);
-  try {
-    const r = await fetch(`${CFG.SUPABASE_URL}/functions/v1/doorgeven`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actie: "inwisselen", code: decodeURIComponent(m[1]) }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.token_hash) return j.fout || `Inloggen via E-Board lukte niet (HTTP ${r.status}).`;
-    const { error } = await sb.auth.verifyOtp({ token_hash: j.token_hash, type: "magiclink" });
-    return error ? "Inloggen via E-Board lukte niet: " + error.message : null;
-  } catch (e) {
-    return "Inloggen via E-Board lukte niet: " + e.message;
-  }
+  const code = decodeURIComponent(m[1]);
+  // E-Board meldt de code aan op het moment van klikken; dat kan een paar tellen duren.
+  // 410 = (nog) onbekend → opnieuw proberen. Klaar = ingelogd of een echte weigering.
+  const poging = async () => {
+    try {
+      const r = await fetch(`${CFG.SUPABASE_URL}/functions/v1/doorgeven`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actie: "inwisselen", code }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 410) return { klaar: false };
+      if (!r.ok || !j.token_hash) return { klaar: true, fout: j.fout || `Inloggen via E-Board lukte niet (HTTP ${r.status}).` };
+      const { error } = await sb.auth.verifyOtp({ token_hash: j.token_hash, type: "magiclink" });
+      return { klaar: true, fout: error ? "Inloggen via E-Board lukte niet: " + error.message : null };
+    } catch (e) { return { klaar: false }; }
+  };
+  const eerste = await poging();
+  if (eerste.klaar) return eerste.fout;
+  // Nog niet binnen: inlogscherm tonen met "bezig", en op de achtergrond doorproberen (±12 s).
+  // Lukt het, dan herlaadt de pagina vanzelf (SIGNED_IN terwijl het inlogscherm open staat).
+  (async () => {
+    for (let i = 0; i < 16; i++) {
+      await new Promise(ok => setTimeout(ok, 750));
+      const p = await poging();
+      if (p.klaar) { if (p.fout) toonMelding("melding-login", "fout", escapeHtml(p.fout)); return; }
+    }
+    toonMelding("melding-login", "fout", "Automatisch inloggen via E-Board lukte niet (staat tweestapsverificatie aan in E-Board?). Log hier gewoon in.");
+  })();
+  return "BEZIG";
 }
 
 /* ------------------------------------------------------- aanroep versturen */
