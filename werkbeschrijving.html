@@ -3,72 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Werkbeschrijving · Debiteuren · Endura</title>
+<title>Werkbeschrijving · P.up by Endura</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .wb { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
-  .wb h1 { font-size: 30px; margin-bottom: 4px; }
-  .wb .onder { color: var(--zacht); margin-bottom: 26px; padding-bottom: 14px; border-bottom: 2px solid var(--goud); }
+  html { scroll-behavior: smooth; }
+  .wb { max-width: 860px; margin: 0 auto; padding: 28px 20px 80px; }
+  .wb h1 { font-size: 28px; margin: 18px 0 4px; }
+  .wb .onder { color: var(--zacht); margin-bottom: 22px; padding-bottom: 14px; border-bottom: 2px solid var(--goud); }
+  .wb .paneel { scroll-margin-top: 16px; }
   .wb ol { padding-left: 22px; }
   .wb ol li, .wb ul li { margin-bottom: 8px; line-height: 1.6; }
   .wb ul { padding-left: 20px; }
   .wb table td, .wb table th { white-space: normal; vertical-align: top; }
+  .wb-kop { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .wb-kop .knoppen { display: flex; gap: 8px; flex-wrap: wrap; }
+  .wb-kop .knop { text-decoration: none; display: inline-block; }
+  .inhoud ol { list-style: none; padding-left: 0; margin: 0; columns: 2; column-gap: 28px; }
+  .inhoud li { margin-bottom: 6px; break-inside: avoid; }
+  .inhoud a { color: var(--tekst); text-decoration: none; border-bottom: 1px solid var(--accent); }
+  .inhoud a:hover { color: var(--accent); }
+  .wb p a, .wb li a, .wb td a { color: var(--accent); }
+  .naar-boven { display: block; text-align: right; font-size: 13px; color: var(--zacht); text-decoration: none; margin-top: 6px; }
+  @media (max-width: 600px) { .inhoud ol { columns: 1; } }
   @media print {
-    body { background: #fff; color: #111; }
-    .paneel { border-color: #bbb; background: #fff; }
+    @page { margin: 16mm 14mm; }
+    body { background: #fff !important; color: #111; }
+    .wb { padding: 0; max-width: none; }
+    .paneel { border-color: #bbb; background: #fff; box-shadow: none; break-inside: avoid; }
     .wb h2 { color: #7a5a16; }
+    .wb .onder { color: #333; }
+    .zacht, .wb .zacht { color: #333; }
+    .inhoud a, .wb a { color: #111; }
+    .niet-printen, .naar-boven { display: none !important; }
+    .merk-logo .logo-donker { display: none !important; }
+    .merk-logo .logo-licht { display: block !important; }
   }
 </style>
 </head>
 <body>
-<script>try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.classList.add("licht"); } catch (e) {}</script>
-<div class="wb">
-  <div class="merk"><span class="merk-punt"></span> Endura</div>
-  <h1>Debiteuren — werkbeschrijving</h1>
-  <p class="onder">Voor Antoine · versie 28 augustus 2026</p>
+<script>/* thema van de app volgen; bij afdrukken (en bij ?druk, waarmee de pdf gemaakt wordt) altijd licht */
+try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.classList.add("licht"); } catch (e) {}
+if (/[?&]druk\b/.test(location.search)) document.body.classList.add("licht");
+let wasLicht = document.body.classList.contains("licht");
+addEventListener("beforeprint", () => { wasLicht = document.body.classList.contains("licht"); document.body.classList.add("licht"); });
+addEventListener("afterprint", () => { if (!wasLicht) document.body.classList.remove("licht"); });</script>
+<div class="wb" id="boven">
+  <div class="wb-kop">
+    <div class="merk-logo">
+      <img class="logo-donker" src="pup-logo-licht.png" alt="P.up by Endura">
+      <img class="logo-licht" src="pup-logo.png" alt="P.up by Endura">
+    </div>
+    <div class="knoppen niet-printen">
+      <a class="knop goud" href="werkbeschrijving.pdf" target="_blank" rel="noreferrer">📄 Open als PDF</a>
+      <button class="knop stil" type="button" onclick="window.print()">🖨 Afdrukken</button>
+    </div>
+  </div>
+  <h1>Werkbeschrijving</h1>
+  <p class="onder">Voor Antoine · versie 12 oktober 2026</p>
 
-  <p>Dit programma haalt de <b>openstaande debiteurenposten van ENDURA rechtstreeks uit Twinfield</b>, laat zien wie te laat is, maakt aanmaningsteksten en verstuurt die — na jouw controle — in één keer vanuit <b>administratie@endura-aruba.com</b>. Er wordt nooit iets verstuurd zonder dat jij op de knop drukt en de samenvatting bevestigt.</p>
+  <p>P.up haalt de <b>openstaande debiteurenposten van ENDURA rechtstreeks uit Twinfield</b>, laat zien wie te laat is, maakt aanmaningsteksten en verstuurt die — na jouw controle — in één keer vanuit <b>administratie@endura-aruba.com</b>. Er wordt nooit iets verstuurd zonder dat jij op de knop drukt en de samenvatting bevestigt.</p>
 
-  <div class="paneel">
+  <nav class="paneel inhoud" aria-label="Inhoud">
+    <h2>Inhoud</h2>
+    <ol>
+      <li><a href="#waar">1 · Wat is waar</a></li>
+      <li><a href="#instellen">2 · Eenmalig instellen</a></li>
+      <li><a href="#tabbladen">3 · Wat doet welk tabblad</a></li>
+      <li><a href="#schakelaar">3b · De hoofdschakelaar</a></li>
+      <li><a href="#aanmanen">4 · Een aanmaanronde</a></li>
+      <li><a href="#afletteren">4b · Afletteren</a></li>
+      <li><a href="#voorzichtig">5 · Waar je voorzichtig mee moet zijn</a></li>
+      <li><a href="#storing">6 · Als iets niet werkt</a></li>
+    </ol>
+  </nav>
+  <div class="paneel" id="waar">
     <h2>1 · Wat is waar</h2>
     <div class="tabel-omhulsel"><table>
       <thead><tr><th>Wat</th><th>Waar</th><th>Bijzonderheden</th></tr></thead>
       <tbody>
-        <tr><td><b>De app</b></td><td>In E-Board: menuknop <b>“Debiteuren”</b></td><td>Alleen jij en Shereen zien de knop en kunnen inloggen</td></tr>
+        <tr><td><b>De app</b></td><td>In E-Board: menuknop <b>“P.up”</b> (of rechtstreeks: <a href="https://sher-endura.github.io/debiteuren-app/" target="_blank" rel="noreferrer">sher-endura.github.io/debiteuren-app</a>)</td><td>Alleen jij en Shereen zien de knop en kunnen inloggen</td></tr>
         <tr><td><b>Inloggen</b></td><td>Zelfde e-mailadres en wachtwoord als <b>E-Board</b></td><td>Eén keer per computer; daarna blijf je ingelogd</td></tr>
         <tr><td><b>Verzendmailbox</b></td><td>administratie@endura-aruba.com — staat vanzelf in jouw Outlook</td><td>Aanmaningen vertrekken hieruit; antwoorden van klanten komen hier binnen</td></tr>
         <tr><td><b>Verbinding met Twinfield</b></td><td>Loopt via een doorgeefluik bij Supabase; de sleutel staat daar in de kluis</td><td>Niets in te stellen — geen token in je browser</td></tr>
-        <tr><td><b>Cijfers</b></td><td>Live uit Twinfield, administratie ENDURA</td><td>Zo vers als je laatste “Ophalen”</td></tr>
+        <tr><td><b>Cijfers</b></td><td>Live uit Twinfield, administratie ENDURA</td><td>Worden bij elke keer openen of inloggen vanzelf vers opgehaald</td></tr>
       </tbody>
     </table></div>
+    <a class="naar-boven" href="#boven">↑ naar boven</a>
   </div>
 
-  <div class="paneel">
+  <div class="paneel" id="instellen">
     <h2>2 · Eenmalig instellen (eerste keer op een computer)</h2>
     <ol>
       <li>Open de app via de knop in E-Board en log in met je E-Board-gegevens.</li>
       <li>Zet bij <b>Instellingen → Aanmaningen</b> de naam op “Administratie Endura” en het antwoordadres op administratie@endura-aruba.com.</li>
-      <li>Klik rechtsboven op <b>Ophalen uit Twinfield</b> — na een paar seconden staan de posten er.</li>
+      <li>Je hoeft niets te klikken: direct na het inloggen haalt de app <b>vanzelf</b> de actuele stand uit Twinfield. Na een paar seconden staan de posten er.</li>
     </ol>
     <p class="zacht klein">Meer is er niet: de verbinding met Twinfield zit aan de serverkant. Je hoeft <b>geen token te plakken</b>.</p>
+    <a class="naar-boven" href="#boven">↑ naar boven</a>
   </div>
 
-  <div class="paneel">
+  <div class="paneel" id="tabbladen">
     <h2>3 · Wat doet welk tabblad</h2>
     <div class="tabel-omhulsel"><table>
       <thead><tr><th>Tabblad</th><th>Wat je er doet</th></tr></thead>
       <tbody>
         <tr><td><b>Overzicht</b></td><td>Totalen, ouderdomsverdeling (hoe lang staat het open) en de grootste openstaande debiteuren.</td></tr>
         <tr><td><b>Debiteuren</b></td><td>Alle posten per klant, uitklapbaar. Zoeken, sorteren, filteren op vervallen. Excel-knoppen voor een rapport per post of per debiteur.</td></tr>
-        <tr><td><b>Aanmaningen</b></td><td>Teksten maken en versturen — zie hoofdstuk 4.</td></tr>
-        <tr><td><b>Afletteren</b></td><td>Openstaande posten van één debiteur tegen elkaar wegstrepen (ook deels). <b>Let op:</b> zie hoofdstuk 5.</td></tr>
+        <tr><td><b>Aanmaningen</b></td><td>Teksten maken en versturen — zie <a href="#aanmanen">hoofdstuk 4</a>.</td></tr>
+        <tr><td><b>Afletteren</b></td><td>Openstaande posten van één debiteur tegen elkaar wegstrepen (ook deels). <b>Let op:</b> zie <a href="#voorzichtig">hoofdstuk 5</a>.</td></tr>
         <tr><td><b>Instellingen</b></td><td>Administratie, afzender van de aanmaningen — en deze werkbeschrijving.</td></tr>
         <tr><td><b>Logboek</b></td><td>Alles wat de app naar Twinfield stuurde en terugkreeg. Nodig als iets niet werkt.</td></tr>
       </tbody>
     </table></div>
+    <a class="naar-boven" href="#boven">↑ naar boven</a>
   </div>
 
-  <div class="paneel">
+  <div class="paneel" id="schakelaar">
     <h2>3b · De hoofdschakelaar</h2>
     <p>Bovenaan het tabblad <b>Aanmaningen</b> staat één grote knop: <b>Stilzetten</b> of <b>Activeren</b>.</p>
     <ul>
@@ -76,22 +128,24 @@
       <li><b>De stand geldt voor iedereen.</b> Zet Shereen hem uit, dan kan Antoine ook niet versturen, en omgekeerd. Je ziet wie hem het laatst omzette en wanneer.</li>
       <li>Gebruik hem bijvoorbeeld tijdens de feestdagen, als de gegevens in Twinfield nog niet kloppen, of als er onrust is over een factuur.</li>
     </ul>
+    <a class="naar-boven" href="#boven">↑ naar boven</a>
   </div>
 
-  <div class="paneel">
+  <div class="paneel" id="aanmanen">
     <h2>4 · Een aanmaanronde, stap voor stap</h2>
     <ol>
-      <li><b>Controleer de hoofdschakelaar</b> bovenaan: die moet groen op AAN staan, anders kun je niet versturen (zie 3b).</li>
-      <li><b>Ophalen uit Twinfield</b> (knop rechtsboven) — altijd éérst, zodat je met de actuele stand werkt en niemand aanmaant die net betaald heeft.</li>
+      <li><b>Controleer de hoofdschakelaar</b> bovenaan: die moet groen op AAN staan, anders kun je niet versturen (zie <a href="#schakelaar">3b</a>).</li>
+      <li>De cijfers zijn vers van het openen van de app. Staat de app al een tijd open? Klik dan eerst nog eens op <b>Ophalen uit Twinfield</b> (rechtsboven), zodat je niemand aanmaant die net betaald heeft.</li>
       <li>Tabblad <b>Aanmaningen</b>: kies wie meedoet (vinkjes) en klik <b>E-mailadressen ophalen</b> — de app haalt ze uit Twinfield; ontbrekende adressen vul je zelf in bij de brief.</li>
       <li><b>Teksten maken.</b> Het niveau kiest de app zelf per debiteur: tot 30 dagen te laat een vriendelijke herinnering, 31–60 dagen een tweede herinnering, daarboven een aanmaning. Elke tekst is nog aan te passen.</li>
       <li>Controleer de brieven. Zet het vinkje <b>“versturen” uit</b> bij iedereen die géén mail mag krijgen (betalingsregeling, gevoelige klant). Wie geen e-mailadres heeft gaat automatisch niet mee.</li>
       <li><b>Versturen via Microsoft 365</b> → eerst een samenvatting (wie, hoeveel) → pas na jouw bevestiging gaan ze de deur uit, in één keer, vanuit administratie@endura-aruba.com.</li>
     </ol>
     <p>Na afloop staan de mails in de <b>Verzonden items van administratie@</b> en zijn de vinkjes automatisch uitgezet, zodat een tweede klik niemand dubbel aanmaant.</p>
+    <a class="naar-boven" href="#boven">↑ naar boven</a>
   </div>
 
-  <div class="paneel">
+  <div class="paneel" id="afletteren">
     <h2>4b · Afletteren, stap voor stap</h2>
     <ol>
       <li><b>Kies een debiteur</b> in de keuzelijst. Standaard staan er alleen debiteuren met een openstaande ontvangst; zet dat vinkje uit om ze allemaal te zien.</li>
@@ -101,19 +155,21 @@
       <li><b>Toon match-bericht</b> laat zien wat er verstuurd zou worden, zonder iets te doen. <b>Doorvoeren in Twinfield</b> schrijft het echt weg, na een bevestiging.</li>
     </ol>
     <p class="zacht klein">Afletteren verandert geen bedragen: het merkt posten aan als vereffend, zodat ze uit de openstaande lijst verdwijnen.</p>
+    <a class="naar-boven" href="#boven">↑ naar boven</a>
   </div>
 
-  <div class="paneel waarschuwing">
+  <div class="paneel waarschuwing" id="voorzichtig">
     <h2>5 · Waar je voorzichtig mee moet zijn</h2>
     <ul>
       <li><b>Afletteren is nog nooit in het echt gebruikt.</b> Het is het enige onderdeel dat ín Twinfield schrijft. De eerste keer: één kleine post, samen met Shereen, en daarna in Twinfield controleren. Met “Toon match-bericht” kijk je altijd eerst zonder dat er iets verstuurd wordt.</li>
       <li><b>Deelbetalingen:</b> verlaag het bedrag achter de regel, niet het bedrag van de factuur zelf. De app laat nooit meer afletteren dan er openstaat.</li>
-      <li>De cijfers zijn een momentopname van je laatste “Ophalen” — ververs vóór je gaat aanmanen.</li>
+      <li>De cijfers zijn een momentopname van het moment van openen (of je laatste klik op Ophalen) — ververs vóór je gaat aanmanen als de app al lang openstaat.</li>
       <li>Maximaal 100 aanmaningen per verstuurronde (bewuste rem).</li>
     </ul>
+    <a class="naar-boven" href="#boven">↑ naar boven</a>
   </div>
 
-  <div class="paneel">
+  <div class="paneel" id="storing">
     <h2>6 · Als iets niet werkt</h2>
     <ul>
       <li><b>“Je bent niet (meer) ingelogd”</b> → pagina verversen en opnieuw inloggen.</li>
@@ -122,6 +178,7 @@
       <li>De app toont oude cijfers na een wijziging → tabblad sluiten en opnieuw openen.</li>
     </ul>
     <p class="zacht klein">Vragen of iets aanpassen aan de app? Via Shereen.</p>
+    <a class="naar-boven" href="#boven">↑ naar boven</a>
   </div>
 </div>
 </body>

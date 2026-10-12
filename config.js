@@ -1,4 +1,4 @@
-// Debiteuren · Endura — verbindingsgegevens.
+// P.up by Endura (voorheen "Debiteuren · Endura") — verbindingsgegevens.
 //
 // INLOGGEN gaat via het E-Board-systeem (Supabase-project van E-Board):
 // dezelfde e-mailadressen en wachtwoorden als E-Board, dus geen tweede

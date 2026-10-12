@@ -11,8 +11,7 @@ const OPSLAG_INST   = "debiteuren.instellingen.v1";
 const OPSLAG_POSTEN = "debiteuren.posten.v1";
 const OPSLAG_EMAILS = "debiteuren.emails.v1";
 
-let inst = { office: "ENDURA", dagen: 30, afzender: "Endura Accounting & Advisory", antwoord: "",
-             verbinding: "direct", dlEndpoint: "", dlToken: "" };
+let inst = { office: "ENDURA", dagen: 30, afzender: "Endura Accounting & Advisory", antwoord: "" };
 let posten = [];            // genormaliseerde openstaande posten
 let opgehaaldOp = null;     // wanneer voor het laatst opgehaald
 let emails = {};            // debiteurnummer -> e-mailadres
@@ -945,23 +944,17 @@ function laadInstellingen() {
     const bewaard = JSON.parse(localStorage.getItem(OPSLAG_INST));
     if (bewaard) inst = { ...inst, ...bewaard };
   } catch (e) { /* eerste keer */ }
+  // Oude route-instellingen (geplakt token e.d.) bestaan niet meer: uit deze browser halen.
+  if ("dlToken" in inst || "dlEndpoint" in inst || "verbinding" in inst) {
+    delete inst.dlToken; delete inst.dlEndpoint; delete inst.verbinding;
+    try { localStorage.setItem(OPSLAG_INST, JSON.stringify(inst)); } catch (e) {}
+  }
   try { emails = JSON.parse(localStorage.getItem(OPSLAG_EMAILS)) || {}; } catch (e) { emails = {}; }
   document.getElementById("in-office").value = inst.office || "";
   document.getElementById("in-dagen").value = inst.dagen ?? 30;
   document.getElementById("in-afzender").value = inst.afzender || "";
   document.getElementById("in-antwoord").value = inst.antwoord || "";
-  document.getElementById("in-endpoint").textContent = (CFG.SUPABASE_URL || "—") + "/functions/v1/directlink";
-  document.getElementById("in-dl-endpoint").value = inst.dlEndpoint || "";
-  document.getElementById("in-dl-token").value = inst.dlToken || "";
-  (inst.verbinding === "luik"
-    ? document.getElementById("vb-luik")
-    : document.getElementById("vb-direct")).checked = true;
-  toonVerbindingsblok();
-}
-
-function toonVerbindingsblok() {
-  document.getElementById("blok-direct").style.display =
-    document.getElementById("vb-luik").checked ? "none" : "";
+  document.getElementById("in-endpoint").textContent = (CFG.FUNCTIES_URL || CFG.SUPABASE_URL || "—") + "/functions/v1/twinfield-proxy";
 }
 
 function bewaarInstellingen() {
@@ -969,9 +962,6 @@ function bewaarInstellingen() {
   inst.dagen    = Number(document.getElementById("in-dagen").value) || 0;
   inst.afzender = document.getElementById("in-afzender").value.trim();
   inst.antwoord = document.getElementById("in-antwoord").value.trim();
-  inst.verbinding = document.getElementById("vb-luik").checked ? "luik" : "direct";
-  inst.dlEndpoint = document.getElementById("in-dl-endpoint").value.trim();
-  inst.dlToken    = document.getElementById("in-dl-token").value.trim();
   localStorage.setItem(OPSLAG_INST, JSON.stringify(inst));
   document.getElementById("paginahint").textContent = `Openstaande debiteurenposten van administratie ${inst.office}.`;
 }
@@ -1158,12 +1148,8 @@ document.getElementById("btn-match-door").addEventListener("click", async () => 
   knop.disabled = false; knop.textContent = "Doorvoeren in Twinfield";
 });
 
-["in-office", "in-dagen", "in-afzender", "in-antwoord", "in-dl-endpoint", "in-dl-token"].forEach(id =>
+["in-office", "in-dagen", "in-afzender", "in-antwoord"].forEach(id =>
   document.getElementById(id).addEventListener("change", bewaarInstellingen));
-["vb-direct", "vb-luik"].forEach(id =>
-  document.getElementById(id).addEventListener("change", () => { bewaarInstellingen(); toonVerbindingsblok(); }));
-document.getElementById("in-dl-toon").addEventListener("change", (e) =>
-  document.getElementById("in-dl-token").type = e.target.checked ? "text" : "password");
 
 document.getElementById("btn-toets").addEventListener("click", async () => {
   const knop = document.getElementById("btn-toets");
@@ -1211,6 +1197,18 @@ document.getElementById("btn-velden").addEventListener("click", async () => {
   knop.disabled = false;
 });
 
+/* Werkbeschrijving in een eigen, smal venster rechts op het scherm, om naast de app
+   te zetten (zelfde aanpak als de handleidingen in E-Board). Blokkeert de browser
+   het venster, dan wordt het een nieuw tabblad. */
+document.getElementById("btn-werkbeschrijving").addEventListener("click", (e) => {
+  e.preventDefault();
+  const w = Math.min(760, Math.round(screen.availWidth / 2.2));
+  const venster = window.open("werkbeschrijving.html", "pup-werkbeschrijving",
+    `popup=yes,width=${w},height=${screen.availHeight},left=${screen.availWidth - w},top=0`);
+  if (venster) venster.focus();
+  else window.open("werkbeschrijving.html", "_blank", "noopener");
+});
+
 document.getElementById("btn-wis").addEventListener("click", () => {
   if (!confirm("Alle opgeslagen posten, instellingen en e-mailadressen in deze browser wissen?")) return;
   [OPSLAG_INST, OPSLAG_POSTEN, OPSLAG_EMAILS, "debiteuren.velddefinitie.v1"].forEach(k => localStorage.removeItem(k));
@@ -1237,5 +1235,9 @@ document.getElementById("btn-log-wis").addEventListener("click", () => { logrege
   const start = (location.hash || "").replace("#", "");
   naarTab(TAB_TITELS[start] ? start : "overzicht");
   haalSchakelaar();   // stand van de hoofdschakelaar ophalen (mag op de achtergrond)
+  // Bij elke keer openen/inloggen meteen de actuele stand uit Twinfield halen
+  // (Shereen 12 okt: "bij de login moet alles er live in staan"). De laatst
+  // bewaarde cijfers staan er intussen al, dus het scherm is nooit leeg.
+  ophalen();
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();

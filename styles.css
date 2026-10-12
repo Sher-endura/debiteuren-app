@@ -163,6 +163,15 @@ p  { margin: 4px 0 0; }
 .merk { display: flex; align-items: center; gap: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; font-size: 13px; color: var(--zacht); }
 .merk-punt { width: 10px; height: 10px; border-radius: 3px; background: linear-gradient(135deg, var(--accent), var(--accent-diep)); box-shadow: 0 0 14px var(--accent-gloed); }
 .merk-onder { font-size: 21px; font-weight: 600; margin: 4px 0 26px 19px; color: var(--tekst); }
+/* P.up-logo: lichte variant op de donkere achtergrond, het origineel in het lichte thema */
+.merk-logo { margin: 0 0 24px 4px; line-height: 0; }
+.merk-logo img { height: 46px; width: auto; display: block; }
+.merk-logo .logo-licht { display: none; }
+body.licht .merk-logo .logo-donker { display: none; }
+body.licht .merk-logo .logo-licht { display: block; }
+.merk-logo.groot { margin: 0 0 18px; }
+.merk-logo.groot img { height: 64px; }
+.wb .merk-logo { margin: 0; }
 
 /* ---------- raamwerk ---------- */
 .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
@@ -337,6 +346,8 @@ td.naam { white-space: normal; min-width: 180px; }
     padding: 14px 14px 8px;
   }
   .merk-onder { display: none; }
+  .merk-logo { margin: 0 0 10px 2px; }
+  .merk-logo img { height: 34px; }
   #nav { flex-direction: row; overflow-x: auto; gap: 4px; padding-bottom: 4px; }
   .nav-knop { white-space: nowrap; padding: 8px 12px; }
   .nav-knop.actief { box-shadow: inset 0 -2px 0 var(--accent); }

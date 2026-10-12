@@ -106,76 +106,37 @@ async function doorgeefbriefjeInwisselen() {
 
 /* ------------------------------------------------------- aanroep versturen */
 
-const STANDAARD_ENDPOINT = "https://secure.directlink.nu/api/v1/dataimport/upload";
-
-/* Het endpointveld vergeeft slordigheden: leeg = standaard, alleen een domein
-   krijgt het pad erbij, en https:// wordt aangevuld. Een kale domeinnaam gaf
-   eerder HTTP 405 van de DirectLink-server (echt gebeurd, 23 aug 2026). */
-function maakEndpoint(ingevoerd) {
-  let e = (ingevoerd || "").trim();
-  if (!e) return STANDAARD_ENDPOINT;
-  if (!/^https?:\/\//i.test(e)) e = "https://" + e;
-  const zonderSlash = e.replace(/\/+$/, "");
-  // Alleen een domein (geen pad)? Dan het standaardpad erachter.
-  if (/^https?:\/\/[^\/]+$/i.test(zonderSlash)) return zonderSlash + "/api/v1/dataimport/upload";
-  return zonderSlash;
-}
-
-/* Twee routes:
-   - "direct": rechtstreeks naar DirectLink met het token dat op het tabblad
-     Instellingen is geplakt — zoals Template 1 uit het onboardingpakket.
-   - "luik": via de Supabase-functie met het token in de kluis. Let op: de
-     beschermlaag van Supabase houdt XML-berichten uit een browser tegen
-     (vastgesteld 22 aug 2026 — lege HTTP 400 vóór de functiecode), dus deze
-     route werkt pas weer als dat opgelost is. */
+/* Eén vaste route (12 okt 2026, Shereen: "er moet een connectie zijn en die moet
+   blijven"): browser → functie twinfield-proxy bij Supabase → DirectLink → Twinfield.
+   Het DirectLink-token staat ALLEEN in de kluis van Supabase (DIRECTLINK_TOKEN);
+   er gaat nooit een token uit de browser mee. Zo werkt het overal hetzelfde —
+   online, op localhost, bij Shereen en bij Antoine — en kan een oud token dat
+   nog in een browser staat de verbinding niet meer verstoren.
+   (De vroegere "rechtstreekse" route met een geplakt token is weg.) */
 async function dlVerstuur(xml, watVoor) {
   const begin = performance.now();
-  let resp, raw, bron;
-  // Op een echt internetadres kan de browser DirectLink niet rechtstreeks
-  // aanroepen (CORS); dan altijd via het doorgeefluik, ongeacht de keuze.
-  const moetViaLuik = inst.verbinding === "luik" || !/^(localhost|127\.0\.0\.1)/.test(location.hostname);
+  const bron = "Het doorgeefluik";
+  let resp, raw;
   try {
-    if (!moetViaLuik) {
-      bron = "DirectLink";
-      const token = (inst.dlToken || "").trim().replace(/^bearer\s+/i, "");
-      if (!token) throw new Error("Plak eerst het DirectLink-token op het tabblad Instellingen (blok Verbinding).");
-      resp = await fetch(maakEndpoint(inst.dlEndpoint), {
-        method: "POST",
-        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/xml" },
-        body: xml
-      });
-    } else {
-      bron = "het doorgeefluik";
-      if (!CLOUD) throw new Error("Geen verbinding ingesteld (config.js is leeg).");
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) throw new Error("Je bent niet meer ingelogd — ververs de pagina en log opnieuw in.");
-      // De XML gaat als base64 mee, zodat de inhoud onderweg nergens als opmaak
-      // kan worden aangezien. Het token gaat alleen mee zolang de kluis het niet
-      // heeft; staat het daar, dan hoeft geen enkele browser het te kennen.
-      resp = await fetch(`${CFG.FUNCTIES_URL || CFG.SUPABASE_URL}/functions/v1/twinfield-proxy`, {
-        method: "POST",
-        headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          xml_b64: naarBase64(xml),
-          token: (inst.dlToken || "").trim().replace(/^bearer\s+/i, "")
-        })
-      });
-    }
+    if (!CLOUD) throw new Error("Geen verbinding ingesteld (config.js is leeg).");
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error("Je bent niet meer ingelogd — ververs de pagina en log opnieuw in.");
+    // De XML gaat als base64 mee, zodat de inhoud onderweg nergens als opmaak
+    // kan worden aangezien.
+    resp = await fetch(`${CFG.FUNCTIES_URL || CFG.SUPABASE_URL}/functions/v1/twinfield-proxy`, {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/json" },
+      body: JSON.stringify({ xml_b64: naarBase64(xml) })
+    });
     raw = await resp.text();
   } catch (e) {
     logBij(watVoor, xml, "netwerkfout: " + e.message, false, performance.now() - begin);
-    const cors = /failed to fetch|networkerror|load failed/i.test(e.message);
-    throw new Error((bron || "De verbinding") + " was niet te bereiken: " + e.message +
-      (cors && bron === "DirectLink"
-        ? ` — dit is meestal CORS: vraag DirectLink om ${location.origin} te whitelisten (mail naar info@directlink.nu).`
-        : ""));
+    throw new Error(bron + " was niet te bereiken: " + e.message);
   }
   logBij(watVoor, xml, raw, resp.ok, performance.now() - begin);
   if (!resp.ok) {
-    const hint = resp.status === 405
-      ? " — dit betekent meestal dat het DirectLink-endpoint op Instellingen niet klopt; maak dat veld leeg, dan gebruikt de app het juiste adres."
-      : resp.status === 401
-      ? " — het token wordt geweigerd; controleer of het volledig en zonder spaties geplakt is."
+    const hint = resp.status === 401
+      ? " — de inlog is verlopen of de sleutel in de kluis wordt geweigerd. Ververs de pagina; helpt dat niet, dan moet het DirectLink-token in de kluis (Supabase → Edge Functions → Secrets → DIRECTLINK_TOKEN) vernieuwd worden."
       : "";
     throw new Error(`${bron} gaf HTTP ${resp.status}: ${raw.slice(0, 300)}${hint}`);
   }
