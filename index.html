@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css?v=9">
+<link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
 <script>/* thema toepassen vóór de eerste weergave, anders knippert het scherm */
@@ -48,7 +48,6 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
       <button class="nav-knop actief" data-tab="overzicht"><span class="ico">◆</span> Overzicht</button>
       <button class="nav-knop" data-tab="debiteuren"><span class="ico">▤</span> Debiteuren</button>
       <button class="nav-knop" data-tab="aanmaningen"><span class="ico">✉</span> Aanmaningen</button>
-      <button class="nav-knop" data-tab="afletteren"><span class="ico">⇄</span> Afletteren</button>
       <button class="nav-knop" data-tab="instellingen"><span class="ico">⚙</span> Instellingen</button>
       <button class="nav-knop" data-tab="logboek"><span class="ico">≡</span> Logboek</button>
     </nav>
@@ -176,48 +175,6 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
       </div>
     </section>
 
-    <!-- ---------- Afletteren ---------- -->
-    <section class="tab" id="tab-afletteren">
-      <div class="paneel waarschuwing">
-        <h2>Nog niet beproefd</h2>
-        <p class="klein">Afletteren is het enige onderdeel dat <b>in</b> Twinfield schrijft. De opbouw van het match-bericht volgt de Twinfield-documentatie, maar is nog niet één keer echt doorgevoerd. Doe de eerste keer één kleine post en kijk in Twinfield of het klopt. Zolang je op <b>Toon match-bericht</b> klikt, gaat er niets de deur uit.</p>
-      </div>
-      <div class="paneel">
-        <h2>1 · Kies een debiteur</h2>
-        <div class="werkbalk">
-          <select id="match-klant" style="min-width:340px"></select>
-          <label class="vink"><input type="checkbox" id="match-alleen-ontvangst" checked> Alleen debiteuren met een openstaande ontvangst</label>
-        </div>
-        <p class="zacht klein">Zet het vinkje uit om álle debiteuren met openstaande posten te zien — bijvoorbeeld om twee facturen tegen een creditnota af te letteren.</p>
-      </div>
-      <div class="paneel" id="paneel-match" style="display:none">
-        <h2>2 · Vink aan wat tegen elkaar wegvalt</h2>
-        <p class="zacht klein">Alle openstaande posten van <b id="match-debiteur"></b>. Facturen staan positief, ontvangsten en creditnota's negatief. Het bedrag mag je aanpassen voor een <b>deelbetaling</b> — het gekozen totaal moet op <b>nul</b> uitkomen.</p>
-        <div class="tabel-omhulsel">
-          <table id="tabel-match">
-            <thead><tr><th></th><th>Soort</th><th>Factuur / boekstuk</th><th>Datum</th><th>Vervalt</th><th class="num">Openstaand</th><th class="num">Af te letteren</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="match-voet">
-          <div>Gekozen: <b id="match-aantal">0</b> posten · facturen <b id="match-facturen">0,00</b> · ontvangsten <b id="match-ontvangst">0,00</b> · verschil <b id="match-verschil">0,00</b> <span class="zacht klein">(moet nul zijn, of kies hoe het verschil weg mag)</span></div>
-          <div class="knoppen">
-            <button class="knop stil" id="btn-match-alles">Alles aanvinken</button>
-            <button class="knop stil" id="btn-match-xml">Toon match-bericht</button>
-            <button class="knop goud" id="btn-match-door">Doorvoeren in Twinfield</button>
-          </div>
-        </div>
-        <div id="match-verschilkeuze" class="verschilkeuze" style="display:none">
-          <div>Het verschil van <b id="match-verschil-bedrag">0,00</b> wegboeken als:</div>
-          <label class="vink"><input type="radio" name="match-soort" value="currency"> Koersverschil</label>
-          <label class="vink"><input type="radio" name="match-soort" value="writeoff"> Afboeking</label>
-          <div id="match-verschil-uitleg" class="klein"></div>
-        </div>
-        <pre id="match-xml" class="code" style="display:none"></pre>
-        <div id="melding-match" class="melding-plek"></div>
-      </div>
-    </section>
-
     <!-- ---------- Instellingen ---------- -->
     <section class="tab" id="tab-instellingen">
       <div class="paneel">
@@ -286,9 +243,9 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
   </main>
 </div>
 
-<script src="config.js?v=9"></script>
+<script src="config.js?v=10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="api.js?v=9"></script>
-<script src="app.js?v=9"></script>
+<script src="api.js?v=10"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>

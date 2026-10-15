@@ -1,7 +1,7 @@
 "use strict";
 /* ============================================================================
    app.js — wat je op het scherm ziet: overzicht, debiteurenlijst, aanmaningen,
-   afletteren, instellingen en logboek.
+   instellingen en logboek.
 
    Opgehaalde posten en instellingen staan alleen in deze browser
    (localStorage). Er gaat niets naar een database.
@@ -17,7 +17,6 @@ let opgehaaldOp = null;     // wanneer voor het laatst opgehaald
 let emails = {};            // debiteurnummer -> e-mailadres
 let logregels = [];
 let openGroepen = new Set();
-let matchKeuze = { klant: null, bedragen: new Map() };   // afletteren: post -> af te letteren bedrag
 let topSortering = { veld: "open", richting: -1 };   // tabel "Grootste openstaande debiteuren"
 
 /* ================================ hulpjes ================================ */
@@ -182,7 +181,6 @@ function vernieuwAlles() {
   vernieuwOverzicht();
   vernieuwDebiteuren();
   vernieuwAanmaningKeuze();
-  vernieuwAfletteren();
 }
 
 function vernieuwStand() {
@@ -800,193 +798,6 @@ async function haalEmails() {
   if (uitkomst.children.length) maakAanmaningen();
 }
 
-/* =============================== afletteren ============================== */
-/* =============================== afletteren ==============================
-   Opzet: eerst een debiteur kiezen, dan ál zijn openstaande posten in één
-   lijst — facturen (positief) én ontvangsten/creditnota's (negatief). Per
-   aangevinkte regel staat een bedrag dat je kunt aanpassen, zodat ook een
-   DEELBETALING kan. Het gekozen totaal moet op nul uitkomen; anders weigert
-   Twinfield de match.
-   matchKeuze.bedragen is een Map van post -> af te letteren bedrag. */
-
-function debiteurenMetPosten() {
-  const alleenOntvangst = document.getElementById("match-alleen-ontvangst").checked;
-  return groepeer(posten)
-    .filter(g => !alleenOntvangst || g.posten.some(p => p.open < 0))
-    .sort((a, b) => (a.naam || a.klant).localeCompare(b.naam || b.klant, "nl"));
-}
-
-function vernieuwAfletteren() {
-  const keuzelijst = document.getElementById("match-klant");
-  const groepen = debiteurenMetPosten();
-  const vorige = matchKeuze.klant;
-
-  if (!posten.length) {
-    keuzelijst.innerHTML = `<option value="">Nog niets opgehaald — klik eerst op Ophalen</option>`;
-    document.getElementById("paneel-match").style.display = "none";
-    return;
-  }
-  if (!groepen.length) {
-    keuzelijst.innerHTML = `<option value="">Geen debiteuren die aan de keuze voldoen</option>`;
-    document.getElementById("paneel-match").style.display = "none";
-    return;
-  }
-
-  keuzelijst.innerHTML = `<option value="">— kies een debiteur —</option>` +
-    groepen.map(g => {
-      const ontv = g.posten.filter(p => p.open < 0).length;
-      return `<option value="${escapeHtml(g.klant)}">${escapeHtml(g.naam || g.klant)} (${escapeHtml(g.klant)}) — ` +
-        `${g.posten.length} ${g.posten.length === 1 ? "post" : "posten"}, saldo ${geld(g.open, "")}` +
-        `${ontv ? `, ${ontv} ontvangst${ontv === 1 ? "" : "en"}` : ""}</option>`;
-    }).join("");
-
-  // Eerdere keuze proberen te behouden na een verse ophaalronde.
-  if (vorige && groepen.some(g => g.klant === vorige)) {
-    keuzelijst.value = vorige;
-    toonMatchPosten();
-  } else {
-    matchKeuze = { klant: null, bedragen: new Map() };
-    document.getElementById("paneel-match").style.display = "none";
-  }
-}
-
-/* Alle openstaande posten van de gekozen debiteur, oudste eerst. */
-function matchPosten() {
-  if (!matchKeuze.klant) return [];
-  return posten.filter(p => p.klant === matchKeuze.klant)
-               .sort((a, b) => (b.dagen ?? -9999) - (a.dagen ?? -9999));
-}
-
-function toonMatchPosten() {
-  const paneel = document.getElementById("paneel-match");
-  if (!matchKeuze.klant) { paneel.style.display = "none"; return; }
-  paneel.style.display = "";
-  document.getElementById("match-xml").style.display = "none";
-  wisMelding("melding-match");
-
-  const lijst = matchPosten();
-  const g = groepeer(lijst)[0];
-  document.getElementById("match-debiteur").textContent =
-    (g ? (g.naam || g.klant) : matchKeuze.klant) + " (" + matchKeuze.klant + ")";
-
-  const tb = document.querySelector("#tabel-match tbody");
-  tb.innerHTML = lijst.map((p, i) => {
-    const gekozen = matchKeuze.bedragen.has(p);
-    const bedrag = gekozen ? matchKeuze.bedragen.get(p) : p.open;
-    return `
-    <tr>
-      <td><input type="checkbox" class="match-vink" value="${i}" ${gekozen ? "checked" : ""}></td>
-      <td>${p.open < 0 ? `<span class="groen-tekst">Ontvangst</span>` : "Factuur"}</td>
-      <td>${escapeHtml(p.factuur || (p.boekstukcode + " " + p.boekstuknr).trim())}
-          ${p.factuur ? `<span class="zacht klein">${escapeHtml((p.boekstukcode + " " + p.boekstuknr).trim())}</span>` : ""}</td>
-      <td>${datumTekst(p.datum)}</td>
-      <td>${datumTekst(p.vervalt)}</td>
-      <td class="num">${geld(p.open, "")}</td>
-      <td class="num"><input type="text" class="match-bedrag num" data-i="${i}" value="${bedrag.toFixed(2).replace(".", ",")}"
-            ${gekozen ? "" : "disabled"} style="width:120px; text-align:right"></td>
-    </tr>`;
-  }).join("") || `<tr><td colspan="7" class="zacht">Deze debiteur heeft geen openstaande posten.</td></tr>`;
-
-  tb.querySelectorAll(".match-vink").forEach(vink => vink.addEventListener("change", () => {
-    const p = lijst[+vink.value];
-    if (vink.checked) matchKeuze.bedragen.set(p, p.open);
-    else matchKeuze.bedragen.delete(p);
-    toonMatchPosten();
-  }));
-
-  tb.querySelectorAll(".match-bedrag").forEach(veld => veld.addEventListener("change", () => {
-    const p = lijst[+veld.dataset.i];
-    let bedrag = parseBedrag(veld.value);
-    // Niet meer dan er openstaat, en hetzelfde teken als de post zelf:
-    // een factuur letter je debet af, een ontvangst credit.
-    if (p.open > 0) bedrag = Math.min(Math.max(bedrag, 0), p.open);
-    else bedrag = Math.max(Math.min(bedrag, 0), p.open);
-    matchKeuze.bedragen.set(p, bedrag);
-    veld.value = bedrag.toFixed(2).replace(".", ",");
-    vernieuwMatchVoet();
-  }));
-
-  vernieuwMatchVoet();
-}
-
-function vernieuwMatchVoet() {
-  let facturen = 0, ontvangsten = 0;
-  for (const bedrag of matchKeuze.bedragen.values()) {
-    if (bedrag >= 0) facturen += bedrag; else ontvangsten += bedrag;
-  }
-  const verschil = facturen + ontvangsten;
-  const aantal = matchKeuze.bedragen.size;
-
-  document.getElementById("match-aantal").textContent = aantal;
-  document.getElementById("match-facturen").textContent = geld(facturen, "");
-  document.getElementById("match-ontvangst").textContent = geld(ontvangsten, "");
-  const el = document.getElementById("match-verschil");
-  el.textContent = geld(verschil, "");
-  el.className = aantal && Math.abs(verschil) < 0.005 ? "groen-tekst" : "goud-tekst";
-
-  // Een verschil mag Twinfield zelf wegboeken (koersverschil of afboeking);
-  // dan moet er wel een regel zijn die het kan dragen (zie verschilDrager).
-  const heeftVerschil = aantal >= 2 && Math.abs(verschil) >= 0.005;
-  const vak = document.getElementById("match-verschilkeuze");
-  vak.style.display = heeftVerschil ? "" : "none";
-  const soort = matchKeuze.verschilSoort || null;
-  document.querySelectorAll('input[name="match-soort"]').forEach(r => { r.checked = r.value === soort; });
-  let verschilKlaar = false;
-  if (heeftVerschil) {
-    document.getElementById("match-verschil-bedrag").textContent = geld(verschil, "");
-    const uitleg = document.getElementById("match-verschil-uitleg");
-    const regels = matchRegels();
-    const drager = regels.find(r => r.afboeken) || verschilDrager(regels, verschil);
-    if (!drager) {
-      uitleg.textContent = verschil > 0
-        ? "Om het verschil weg te boeken moet minstens één aangevinkte factuur op het volle openstaande bedrag staan (geen deelbetaling)."
-        : "Om het verschil weg te boeken moet minstens één aangevinkte ontvangst op het volle openstaande bedrag staan.";
-    } else if (!soort) {
-      uitleg.textContent = "Kies wat het verschil is. Twinfield boekt het op de rekening die in de Twinfield-instellingen van de administratie voor afletterverschillen staat.";
-    } else {
-      uitleg.textContent = `${soort === "currency" ? "Koersverschil" : "Afboeking"} van ${geld(verschil, "")} op ` +
-        `${drager.boekstukcode} ${drager.boekstuknr}. Twinfield boekt het op de rekening die in de Twinfield-instellingen ` +
-        `van de administratie voor ${soort === "currency" ? "koersverschillen" : "afboekingen"} staat.`;
-      verschilKlaar = true;
-    }
-  }
-
-  // Doorvoeren mag alleen bij minstens twee posten die samen op nul uitkomen,
-  // of waarvan je het verschil laat wegboeken.
-  document.getElementById("btn-match-door").disabled =
-    aantal < 2 || (Math.abs(verschil) >= 0.005 && !verschilKlaar);
-}
-
-/* Welke regel het verschil draagt. Twinfield zet een afboeking op één regel
-   met hetzelfde teken als het verschil: blijft er van de facturen iets over
-   (te weinig ontvangen), dan op een factuur; is er te veel ontvangen, dan op
-   een ontvangst. Die regel moet helemaal afgeletterd worden (geen
-   deelbetaling) en minstens zo groot zijn als het verschil. Bij meer
-   kandidaten: de jongste. */
-function verschilDrager(regels, verschil) {
-  const kandidaten = regels.filter(r => r.heel && Math.sign(r.bedrag) === Math.sign(verschil) &&
-                                        Math.abs(r.bedrag) >= Math.abs(verschil));
-  kandidaten.sort((a, b) => String(b.datum || "").localeCompare(String(a.datum || "")));
-  return kandidaten[0] || null;
-}
-
-function matchRegels() {
-  // Twinfield wil per regel het bedrag dat op díe regel afgeletterd wordt.
-  const regels = [...matchKeuze.bedragen.entries()]
-    .filter(([, bedrag]) => Math.abs(bedrag) >= 0.005)
-    .map(([p, bedrag]) => ({
-      boekstukcode: p.boekstukcode, boekstuknr: p.boekstuknr, regelnr: p.regelnr, bedrag,
-      datum: p.datum instanceof Date ? p.datum.toISOString() : p.datum,
-      heel: Math.abs(bedrag - p.open) < 0.005
-    }));
-  const verschil = Math.round(regels.reduce((s, r) => s + r.bedrag, 0) * 100) / 100;
-  if (Math.abs(verschil) >= 0.005 && matchKeuze.verschilSoort) {
-    const drager = verschilDrager(regels, verschil);
-    if (drager) { drager.afboeken = verschil; drager.afboekSoort = matchKeuze.verschilSoort; }
-  }
-  return regels;
-}
-
 /* =============================== instellingen ============================ */
 
 function laadInstellingen() {
@@ -1052,7 +863,6 @@ async function ophalen() {
     const nieuw = normaliseer(rijen, velden);
     posten = nieuw;
     opgehaaldOp = new Date().toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
-    matchKeuze = { klant: null, bedragen: new Map() };
     bewaarPosten();
     vernieuwAlles();
     if (!rijen.length) {
@@ -1083,7 +893,6 @@ const TAB_TITELS = {
   overzicht:    ["Overzicht", () => `Openstaande debiteurenposten van administratie ${inst.office}.`],
   debiteuren:   ["Debiteuren", () => "Alle openstaande posten, gegroepeerd per debiteur."],
   aanmaningen:  ["Aanmaningen", () => "Conceptteksten per debiteur. Versturen doe je zelf."],
-  afletteren:   ["Afletteren", () => "Ontvangsten aan facturen hangen. Dit schrijft in Twinfield."],
   instellingen: ["Instellingen", () => "Administratie, verbinding en aanmaningsteksten."],
   logboek:      ["Logboek", () => "Wat er heen en terug ging naar Twinfield."]
 };
@@ -1149,76 +958,6 @@ document.getElementById("btn-maak-aanmaningen").addEventListener("click", maakAa
 document.getElementById("btn-emails").addEventListener("click", haalEmails);
 document.getElementById("btn-verstuur-alles").addEventListener("click", verstuurAlles);
 document.getElementById("btn-schakelaar").addEventListener("click", zetSchakelaar);
-
-document.getElementById("match-klant").addEventListener("change", (e) => {
-  matchKeuze = { klant: e.target.value || null, bedragen: new Map() };
-  toonMatchPosten();
-});
-document.getElementById("match-alleen-ontvangst").addEventListener("change", vernieuwAfletteren);
-document.querySelectorAll('input[name="match-soort"]').forEach(r => r.addEventListener("change", () => {
-  matchKeuze.verschilSoort = r.value;
-  vernieuwMatchVoet();
-}));
-document.getElementById("btn-match-alles").addEventListener("click", () => {
-  const lijst = matchPosten();
-  const allesAan = matchKeuze.bedragen.size === lijst.length;
-  matchKeuze.bedragen = new Map();
-  if (!allesAan) for (const p of lijst) matchKeuze.bedragen.set(p, p.open);
-  toonMatchPosten();
-});
-
-document.getElementById("btn-match-xml").addEventListener("click", async () => {
-  const pre = document.getElementById("match-xml");
-  try {
-    toonMelding("melding-match", "ok", "Regelnummers opzoeken in Twinfield…");
-    await vulRegelnummers(inst.office, matchKeuze.klant, [...matchKeuze.bedragen.keys()]);
-  } catch (e) {
-    toonMelding("melding-match", "fout", "Regelnummers opzoeken mislukt: " + escapeHtml(e.message));
-    return;
-  }
-  pre.textContent = bouwMatchXml(inst.office, matchRegels());
-  pre.style.display = "";
-  toonMelding("melding-match", "ok", "Dit is het bericht dat naar Twinfield zou gaan. Er is nog niets verstuurd.");
-});
-
-document.getElementById("btn-match-door").addEventListener("click", async () => {
-  try {
-    toonMelding("melding-match", "ok", "Regelnummers opzoeken in Twinfield…");
-    await vulRegelnummers(inst.office, matchKeuze.klant, [...matchKeuze.bedragen.keys()]);
-    wisMelding("melding-match");
-  } catch (e) {
-    toonMelding("melding-match", "fout", "Regelnummers opzoeken mislukt: " + escapeHtml(e.message));
-    return;
-  }
-  const regels = matchRegels();
-  const verschil = regels.reduce((s, r) => s + r.bedrag, 0);
-  const drager = regels.find(r => r.afboeken);
-  const vraag = `Afletteren doorvoeren in Twinfield, administratie ${inst.office}?\n\n` +
-    `Debiteur ${matchKeuze.klant}\n` +
-    regels.map(r => `  ${r.boekstukcode} ${r.boekstuknr}: ${geld(r.bedrag, "")}`).join("\n") + "\n\n" +
-    `Verschil: ${geld(verschil, "")}` +
-    (drager ? ` — wordt weggeboekt als ${drager.afboekSoort === "currency" ? "koersverschil" : "afboeking"} op ${drager.boekstukcode} ${drager.boekstuknr}` : "") +
-    "\n\n" +
-    (Math.abs(verschil) >= 0.005 && !drager ? "Let op: het verschil is niet nul. Twinfield weigert dit waarschijnlijk.\n\n" : "") +
-    `Dit wijzigt gegevens in Twinfield.`;
-  if (!confirm(vraag)) return;
-
-  const knop = document.getElementById("btn-match-door");
-  knop.disabled = true; knop.textContent = "Bezig…";
-  try {
-    const uitkomst = await voerMatchUit(inst.office, matchRegels());
-    if (uitkomst.goed) {
-      toonMelding("melding-match", "ok", "Twinfield heeft het afletteren aangenomen. Haal de posten opnieuw op om de nieuwe stand te zien, en kijk in Twinfield of het klopt.");
-    } else {
-      toonMelding("melding-match", "fout",
-        "Twinfield nam het niet aan: " + escapeHtml(uitkomst.fout) +
-        `<br><span class="klein">Het volledige antwoord staat op het tabblad Logboek. Dit onderdeel is nog niet beproefd — de opbouw van het match-bericht moet mogelijk nog bijgesteld worden.</span>`);
-    }
-  } catch (e) {
-    toonMelding("melding-match", "fout", "Doorvoeren mislukt: " + escapeHtml(e.message));
-  }
-  knop.disabled = false; knop.textContent = "Doorvoeren in Twinfield";
-});
 
 ["in-office", "in-dagen", "in-afzender", "in-antwoord"].forEach(id =>
   document.getElementById(id).addEventListener("change", bewaarInstellingen));

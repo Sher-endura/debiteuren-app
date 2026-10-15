@@ -3,7 +3,7 @@
    bewaard door de service worker: elke aanroep naar het doorgeefluik gaat
    rechtstreeks naar het netwerk. */
 
-const CACHE = "debiteuren-endura-v9";   // v9: VRK = regel 1, opnieuw proberen bij 503, 15 okt 2026
+const CACHE = "debiteuren-endura-v10";  // v10: tabblad Afletteren weg (afletteren gebeurt in Twinfield), 15 okt 2026
 const OMHULSEL = ["./", "index.html", "styles.css", "api.js", "app.js", "config.js", "manifest.json",
   "pup-logo.png", "pup-logo-licht.png", "favicon.ico", "favicon-16.png", "favicon-32.png", "favicon-48.png",
   "favicon-180.png", "favicon-192.png", "favicon-512.png", "werkbeschrijving.html", "werkbeschrijving.pdf"];

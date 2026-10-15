@@ -73,7 +73,6 @@ addEventListener("afterprint", () => { if (!wasLicht) document.body.classList.re
       <li><a href="#tabbladen">3 · Wat doet welk tabblad</a></li>
       <li><a href="#schakelaar">3b · De hoofdschakelaar</a></li>
       <li><a href="#aanmanen">4 · Een aanmaanronde</a></li>
-      <li><a href="#afletteren">4b · Afletteren</a></li>
       <li><a href="#voorzichtig">5 · Waar je voorzichtig mee moet zijn</a></li>
       <li><a href="#storing">6 · Als iets niet werkt</a></li>
     </ol>
@@ -112,7 +111,6 @@ addEventListener("afterprint", () => { if (!wasLicht) document.body.classList.re
         <tr><td><b>Overzicht</b></td><td>Totalen, ouderdomsverdeling (hoe lang staat het open) en de grootste openstaande debiteuren.</td></tr>
         <tr><td><b>Debiteuren</b></td><td>Alle posten per klant, uitklapbaar. Zoeken, sorteren, filteren op vervallen. Excel-knoppen voor een rapport per post of per debiteur.</td></tr>
         <tr><td><b>Aanmaningen</b></td><td>Teksten maken en versturen — zie <a href="#aanmanen">hoofdstuk 4</a>.</td></tr>
-        <tr><td><b>Afletteren</b></td><td>Openstaande posten van één debiteur tegen elkaar wegstrepen (ook deels). <b>Let op:</b> zie <a href="#voorzichtig">hoofdstuk 5</a>.</td></tr>
         <tr><td><b>Instellingen</b></td><td>Administratie, afzender van de aanmaningen — en deze werkbeschrijving.</td></tr>
         <tr><td><b>Logboek</b></td><td>Alles wat de app naar Twinfield stuurde en terugkreeg. Nodig als iets niet werkt.</td></tr>
       </tbody>
@@ -145,24 +143,9 @@ addEventListener("afterprint", () => { if (!wasLicht) document.body.classList.re
     <a class="naar-boven" href="#boven">↑ naar boven</a>
   </div>
 
-  <div class="paneel" id="afletteren">
-    <h2>4b · Afletteren, stap voor stap</h2>
-    <ol>
-      <li><b>Kies een debiteur</b> in de keuzelijst. Standaard staan er alleen debiteuren met een openstaande ontvangst; zet dat vinkje uit om ze allemaal te zien.</li>
-      <li>Je ziet nu <b>alle openstaande posten van die klant</b>: facturen positief, ontvangsten en creditnota's negatief.</li>
-      <li><b>Vink aan wat tegen elkaar wegvalt.</b> Achter elke regel staat het bedrag; dat mag je verlagen voor een <b>deelbetaling</b> (bijvoorbeeld 3.000 van een factuur van 8.000).</li>
-      <li>Kijk naar <b>verschil</b> onderaan: dat moet <b>0,00</b> zijn en groen worden. Zolang dat niet zo is, blijft Doorvoeren geblokkeerd — Twinfield accepteert alleen een sluitende match.</li>
-      <li><b>Toon match-bericht</b> laat zien wat er verstuurd zou worden, zonder iets te doen. <b>Doorvoeren in Twinfield</b> schrijft het echt weg, na een bevestiging.</li>
-    </ol>
-    <p class="zacht klein">Afletteren verandert geen bedragen: het merkt posten aan als vereffend, zodat ze uit de openstaande lijst verdwijnen.</p>
-    <a class="naar-boven" href="#boven">↑ naar boven</a>
-  </div>
-
   <div class="paneel waarschuwing" id="voorzichtig">
     <h2>5 · Waar je voorzichtig mee moet zijn</h2>
     <ul>
-      <li><b>Afletteren is nog nooit in het echt gebruikt.</b> Het is het enige onderdeel dat ín Twinfield schrijft. De eerste keer: één kleine post, samen met Shereen, en daarna in Twinfield controleren. Met “Toon match-bericht” kijk je altijd eerst zonder dat er iets verstuurd wordt.</li>
-      <li><b>Deelbetalingen:</b> verlaag het bedrag achter de regel, niet het bedrag van de factuur zelf. De app laat nooit meer afletteren dan er openstaat.</li>
       <li>De cijfers zijn een momentopname van het moment van openen (of je laatste klik op Ophalen) — ververs vóór je gaat aanmanen als de app al lang openstaat.</li>
       <li>Maximaal 100 aanmaningen per verstuurronde (bewuste rem).</li>
     </ul>

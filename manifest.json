@@ -1,7 +1,7 @@
 {
   "name": "P.up by Endura",
   "short_name": "P.up",
-  "description": "Openstaande debiteurenposten van Endura uit Twinfield: overzicht, aanmaningen en afletteren.",
+  "description": "Openstaande debiteurenposten van Endura uit Twinfield: overzicht en aanmaningen.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
