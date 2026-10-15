@@ -330,6 +330,49 @@ function bouwMatchXml(office, regels) {
          `    <lines>\n${lijnen}\n    </lines>\n  </set>\n</match>`;
 }
 
+/* Rapport 130_3 geeft geen regelnummer, en "1" klopt alleen bij een
+   verkoopfactuur: bij een bankboeking is regel 1 de bankregel ("Boeking BNK …
+   regel 1 is niet beschikbaar voor afletteren", 15 okt). Daarom lezen we elke
+   boeking één keer uit Twinfield en zoeken de regel van deze debiteur die nog
+   af te letteren is; bij meer zulke regels beslist het openstaande bedrag.
+   Het gevonden nummer blijft op de post staan. */
+async function vulRegelnummers(office, klant, lijst) {
+  const gelezen = new Map();
+  for (const p of lijst) {
+    if (p.regelnr) continue;
+    const sleutel = p.boekstukcode + "~" + p.boekstuknr;
+    if (!gelezen.has(sleutel)) {
+      const doc = await dlLees(`<read><type>transaction</type><office>${xmlEsc(office)}</office>` +
+        `<code>${xmlEsc(p.boekstukcode)}</code><number>${xmlEsc(p.boekstuknr)}</number></read>`,
+        `regelnummer van ${p.boekstukcode} ${p.boekstuknr} opzoeken`);
+      const t = doc.getElementsByTagName("transaction")[0];
+      if (!t || t.getAttribute("result") === "0")
+        throw new Error(`Boeking ${p.boekstukcode} ${p.boekstuknr} kon niet gelezen worden` +
+          (t && t.getAttribute("msg") ? ": " + t.getAttribute("msg") : "."));
+      // Alleen de echte boekingsregels (<transaction><lines><line>), niet de
+      // <line>-elementen die genest in <matches> staan.
+      const regels = [...t.getElementsByTagName("line")].filter(l =>
+        l.parentElement && l.parentElement.nodeName === "lines" && l.parentElement.parentElement === t);
+      gelezen.set(sleutel, regels);
+    }
+    const tekst = (l, naam) => { const el = [...l.children].find(c => c.nodeName === naam); return el ? el.textContent.trim() : ""; };
+    const kandidaten = gelezen.get(sleutel).filter(l =>
+      tekst(l, "dim2") === klant && !["matched", "notmatchable"].includes(tekst(l, "matchstatus").toLowerCase()));
+    let gekozen = kandidaten.length === 1 ? kandidaten[0] : null;
+    if (kandidaten.length > 1) {
+      const passend = kandidaten.filter(l => ["valueopen", "basevalueopen", "value"].some(v => {
+        const w = tekst(l, v);
+        return w !== "" && Math.abs(Math.abs(parseFloat(w)) - Math.abs(p.open)) < 0.005;
+      }));
+      if (passend.length === 1) gekozen = passend[0];
+    }
+    if (!gekozen)
+      throw new Error(`In boeking ${p.boekstukcode} ${p.boekstuknr} is ${kandidaten.length ? "niet eenduidig" : "geen"} ` +
+        `regel van debiteur ${klant} gevonden die nog af te letteren is.`);
+    p.regelnr = gekozen.getAttribute("id") || "";
+  }
+}
+
 async function voerMatchUit(office, regels) {
   const xml = bouwMatchXml(office, regels);
   const doc = await dlLees(xml, "afletteren doorvoeren");

@@ -1167,14 +1167,29 @@ document.getElementById("btn-match-alles").addEventListener("click", () => {
   toonMatchPosten();
 });
 
-document.getElementById("btn-match-xml").addEventListener("click", () => {
+document.getElementById("btn-match-xml").addEventListener("click", async () => {
   const pre = document.getElementById("match-xml");
+  try {
+    toonMelding("melding-match", "ok", "Regelnummers opzoeken in Twinfield…");
+    await vulRegelnummers(inst.office, matchKeuze.klant, [...matchKeuze.bedragen.keys()]);
+  } catch (e) {
+    toonMelding("melding-match", "fout", "Regelnummers opzoeken mislukt: " + escapeHtml(e.message));
+    return;
+  }
   pre.textContent = bouwMatchXml(inst.office, matchRegels());
   pre.style.display = "";
   toonMelding("melding-match", "ok", "Dit is het bericht dat naar Twinfield zou gaan. Er is nog niets verstuurd.");
 });
 
 document.getElementById("btn-match-door").addEventListener("click", async () => {
+  try {
+    toonMelding("melding-match", "ok", "Regelnummers opzoeken in Twinfield…");
+    await vulRegelnummers(inst.office, matchKeuze.klant, [...matchKeuze.bedragen.keys()]);
+    wisMelding("melding-match");
+  } catch (e) {
+    toonMelding("melding-match", "fout", "Regelnummers opzoeken mislukt: " + escapeHtml(e.message));
+    return;
+  }
   const regels = matchRegels();
   const verschil = regels.reduce((s, r) => s + r.bedrag, 0);
   const drager = regels.find(r => r.afboeken);
