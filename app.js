@@ -909,20 +909,43 @@ function naarTab(naam) {
 
 /* ================================= start ================================= */
 
+/* Reserve-inlog (vangnet, 15 okt 2026): normaal open je P.up via E-Board. Werkt dat niet, dan kun je
+   hier inloggen met wachtwoord ÉN de tweestapscode van je E-Board-account. Zo'n sessie heeft
+   tweestaps (aal2) en wordt door de server net zo toegelaten als een sessie via E-Board. */
+document.getElementById("toon-reserve").addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("login-form").style.display = "";
+  document.getElementById("toon-reserve").parentElement.style.display = "none";
+  document.getElementById("login-email").focus();
+});
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const knop = document.getElementById("btn-login");
-  knop.disabled = true; knop.textContent = "Bezig…";
+  const zetKnop = (bezig) => { knop.disabled = bezig; knop.textContent = bezig ? "Bezig…" : "Inloggen"; };
+  const mislukt = async (tekst) => {
+    await sb.auth.signOut({ scope: "local" }).catch(() => {});
+    window.reserveInlogBezig = false;
+    zetKnop(false);
+    toonMelding("melding-login", "fout", tekst);
+  };
+  zetKnop(true);
+  window.reserveInlogBezig = true;
   const { error } = await sb.auth.signInWithPassword({
     email: document.getElementById("login-email").value.trim(),
     password: document.getElementById("login-wachtwoord").value
   });
-  knop.disabled = false; knop.textContent = "Inloggen";
   if (error) {
-    toonMelding("melding-login", "fout", /invalid login credentials/i.test(error.message)
+    return mislukt(/invalid login credentials/i.test(error.message)
       ? "E-mailadres of wachtwoord klopt niet."
       : "Inloggen mislukt: " + escapeHtml(error.message));
   }
+  const { data: factoren, error: fFout } = await sb.auth.mfa.listFactors();
+  const totp = (factoren && factoren.totp || []).find(f => f.status === "verified");
+  if (fFout || !totp) return mislukt("Voor dit account staat geen tweestapsverificatie aan. Zet die aan in E-Board (Instellingen → Beveiliging) en open P.up via E-Board.");
+  const code = document.getElementById("login-code").value.replace(/\s+/g, "");
+  const { error: cFout } = await sb.auth.mfa.challengeAndVerify({ factorId: totp.id, code });
+  if (cFout) return mislukt("De tweestapscode klopt niet (of is verlopen). Probeer het opnieuw met een nieuwe code.");
+  location.reload();
 });
 
 /* Thema: donker is standaard; de keuze wordt per browser onthouden. */

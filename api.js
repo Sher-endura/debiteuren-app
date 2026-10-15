@@ -38,6 +38,7 @@ async function initAuth() {
   }
   sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
   sb.auth.onAuthStateChange((event) => {
+    if (window.reserveInlogBezig) return;   // reserve-inlog: eerst de tweestapscode, dan pas herladen
     if (event === "SIGNED_IN" && document.getElementById("login-overlay").style.display !== "none") location.reload();
     if (event === "SIGNED_OUT") location.reload();
   });
@@ -51,6 +52,11 @@ async function initAuth() {
   }
 
   gebruiker = session.user;
+  if (!sessieViaEboard(session)) {
+    document.getElementById("login-overlay").style.display = "flex";
+    toonMelding("melding-login", "fout", "Open P.up via E-Board (menu links). Rechtstreeks inloggen met alleen een wachtwoord kan niet meer.");
+    return false;
+  }
   const mail = (gebruiker.email || "").toLowerCase();
   const domein = (CFG.TOEGESTAAN_DOMEIN || "").toLowerCase();
   const lijst = (CFG.TOEGESTANE_ACCOUNTS || []).map(a => a.toLowerCase());
@@ -63,6 +69,19 @@ async function initAuth() {
     return false;
   }
   return true;
+}
+
+/* Veiligheid 15 okt 2026 (optie 2): mensen alleen via E-Board. Zelfde regel als op de server:
+   sessie via E-Board (inlogmanier 'otp'), met tweestaps (aal2). Anders tonen we
+   het scherm "open via E-Board" (de server geeft zo'n sessie toch niets). */
+function sessieViaEboard(session) {
+  try {
+    const p = JSON.parse(atob(session.access_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const amr = Array.isArray(p.amr) ? p.amr : [];
+    if (amr.some(a => a && (a.method === "otp" || a.method === "magiclink"))) return true;
+    if (p.aal === "aal2") return true;
+    return false;
+  } catch (e) { return false; }
 }
 
 /* Geopend vanuit E-Board (E-Board update 145): het adres eindigt op #doorgeven=<code>.
@@ -94,12 +113,12 @@ async function doorgeefbriefjeInwisselen() {
   // Nog niet binnen: inlogscherm tonen met "bezig", en op de achtergrond doorproberen (±12 s).
   // Lukt het, dan herlaadt de pagina vanzelf (SIGNED_IN terwijl het inlogscherm open staat).
   (async () => {
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 70; i++) {   // ±55 s (was ±12 s, 15 okt 2026): de code is 60 s geldig
       await new Promise(ok => setTimeout(ok, 750));
       const p = await poging();
       if (p.klaar) { if (p.fout) toonMelding("melding-login", "fout", escapeHtml(p.fout)); return; }
     }
-    toonMelding("melding-login", "fout", "Automatisch inloggen via E-Board lukte niet (staat tweestapsverificatie aan in E-Board?). Log hier gewoon in.");
+    toonMelding("melding-login", "fout", "Automatisch inloggen via E-Board lukte niet. Ga terug naar E-Board en klik nog een keer op P.up (staat tweestapsverificatie aan in E-Board?).");
   })();
   return "BEZIG";
 }
