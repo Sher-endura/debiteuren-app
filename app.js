@@ -924,17 +924,67 @@ function vernieuwMatchVoet() {
   el.textContent = geld(verschil, "");
   el.className = aantal && Math.abs(verschil) < 0.005 ? "groen-tekst" : "goud-tekst";
 
-  // Doorvoeren mag alleen bij minstens twee posten die samen op nul uitkomen.
-  document.getElementById("btn-match-door").disabled = aantal < 2 || Math.abs(verschil) >= 0.005;
+  // Een verschil mag Twinfield zelf wegboeken (koersverschil of afboeking);
+  // dan moet er wel een regel zijn die het kan dragen (zie verschilDrager).
+  const heeftVerschil = aantal >= 2 && Math.abs(verschil) >= 0.005;
+  const vak = document.getElementById("match-verschilkeuze");
+  vak.style.display = heeftVerschil ? "" : "none";
+  const soort = matchKeuze.verschilSoort || null;
+  document.querySelectorAll('input[name="match-soort"]').forEach(r => { r.checked = r.value === soort; });
+  let verschilKlaar = false;
+  if (heeftVerschil) {
+    document.getElementById("match-verschil-bedrag").textContent = geld(verschil, "");
+    const uitleg = document.getElementById("match-verschil-uitleg");
+    const regels = matchRegels();
+    const drager = regels.find(r => r.afboeken) || verschilDrager(regels, verschil);
+    if (!drager) {
+      uitleg.textContent = verschil > 0
+        ? "Om het verschil weg te boeken moet minstens één aangevinkte factuur op het volle openstaande bedrag staan (geen deelbetaling)."
+        : "Om het verschil weg te boeken moet minstens één aangevinkte ontvangst op het volle openstaande bedrag staan.";
+    } else if (!soort) {
+      uitleg.textContent = "Kies wat het verschil is. Twinfield boekt het op de rekening die in de Twinfield-instellingen van de administratie voor afletterverschillen staat.";
+    } else {
+      uitleg.textContent = `${soort === "currency" ? "Koersverschil" : "Afboeking"} van ${geld(verschil, "")} op ` +
+        `${drager.boekstukcode} ${drager.boekstuknr}. Twinfield boekt het op de rekening die in de Twinfield-instellingen ` +
+        `van de administratie voor ${soort === "currency" ? "koersverschillen" : "afboekingen"} staat.`;
+      verschilKlaar = true;
+    }
+  }
+
+  // Doorvoeren mag alleen bij minstens twee posten die samen op nul uitkomen,
+  // of waarvan je het verschil laat wegboeken.
+  document.getElementById("btn-match-door").disabled =
+    aantal < 2 || (Math.abs(verschil) >= 0.005 && !verschilKlaar);
+}
+
+/* Welke regel het verschil draagt. Twinfield zet een afboeking op één regel
+   met hetzelfde teken als het verschil: blijft er van de facturen iets over
+   (te weinig ontvangen), dan op een factuur; is er te veel ontvangen, dan op
+   een ontvangst. Die regel moet helemaal afgeletterd worden (geen
+   deelbetaling) en minstens zo groot zijn als het verschil. Bij meer
+   kandidaten: de jongste. */
+function verschilDrager(regels, verschil) {
+  const kandidaten = regels.filter(r => r.heel && Math.sign(r.bedrag) === Math.sign(verschil) &&
+                                        Math.abs(r.bedrag) >= Math.abs(verschil));
+  kandidaten.sort((a, b) => String(b.datum || "").localeCompare(String(a.datum || "")));
+  return kandidaten[0] || null;
 }
 
 function matchRegels() {
   // Twinfield wil per regel het bedrag dat op díe regel afgeletterd wordt.
-  return [...matchKeuze.bedragen.entries()]
+  const regels = [...matchKeuze.bedragen.entries()]
     .filter(([, bedrag]) => Math.abs(bedrag) >= 0.005)
     .map(([p, bedrag]) => ({
-      boekstukcode: p.boekstukcode, boekstuknr: p.boekstuknr, regelnr: p.regelnr, bedrag
+      boekstukcode: p.boekstukcode, boekstuknr: p.boekstuknr, regelnr: p.regelnr, bedrag,
+      datum: p.datum instanceof Date ? p.datum.toISOString() : p.datum,
+      heel: Math.abs(bedrag - p.open) < 0.005
     }));
+  const verschil = Math.round(regels.reduce((s, r) => s + r.bedrag, 0) * 100) / 100;
+  if (Math.abs(verschil) >= 0.005 && matchKeuze.verschilSoort) {
+    const drager = verschilDrager(regels, verschil);
+    if (drager) { drager.afboeken = verschil; drager.afboekSoort = matchKeuze.verschilSoort; }
+  }
+  return regels;
 }
 
 /* =============================== instellingen ============================ */
@@ -1105,6 +1155,10 @@ document.getElementById("match-klant").addEventListener("change", (e) => {
   toonMatchPosten();
 });
 document.getElementById("match-alleen-ontvangst").addEventListener("change", vernieuwAfletteren);
+document.querySelectorAll('input[name="match-soort"]').forEach(r => r.addEventListener("change", () => {
+  matchKeuze.verschilSoort = r.value;
+  vernieuwMatchVoet();
+}));
 document.getElementById("btn-match-alles").addEventListener("click", () => {
   const lijst = matchPosten();
   const allesAan = matchKeuze.bedragen.size === lijst.length;
@@ -1123,11 +1177,14 @@ document.getElementById("btn-match-xml").addEventListener("click", () => {
 document.getElementById("btn-match-door").addEventListener("click", async () => {
   const regels = matchRegels();
   const verschil = regels.reduce((s, r) => s + r.bedrag, 0);
+  const drager = regels.find(r => r.afboeken);
   const vraag = `Afletteren doorvoeren in Twinfield, administratie ${inst.office}?\n\n` +
     `Debiteur ${matchKeuze.klant}\n` +
     regels.map(r => `  ${r.boekstukcode} ${r.boekstuknr}: ${geld(r.bedrag, "")}`).join("\n") + "\n\n" +
-    `Verschil: ${geld(verschil, "")}\n\n` +
-    (Math.abs(verschil) >= 0.005 ? "Let op: het verschil is niet nul. Twinfield weigert dit waarschijnlijk.\n\n" : "") +
+    `Verschil: ${geld(verschil, "")}` +
+    (drager ? ` — wordt weggeboekt als ${drager.afboekSoort === "currency" ? "koersverschil" : "afboeking"} op ${drager.boekstukcode} ${drager.boekstuknr}` : "") +
+    "\n\n" +
+    (Math.abs(verschil) >= 0.005 && !drager ? "Let op: het verschil is niet nul. Twinfield weigert dit waarschijnlijk.\n\n" : "") +
     `Dit wijzigt gegevens in Twinfield.`;
   if (!confirm(vraag)) return;
 

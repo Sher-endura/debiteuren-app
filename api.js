@@ -308,21 +308,26 @@ async function haalDebiteurEmail(office, code) {
 
 /* ------------------------------------------------------------- afletteren */
 
-/* Match-bericht voor Twinfield. LET OP: dit onderdeel is nog niet één keer
-   echt doorgevoerd. De opbouw volgt de Twinfield-documentatie voor MatchSet:
-   één <set> met alle regels die samen op nul uitkomen, elk met boekstukcode,
-   boekstuknummer, regelnummer en het bedrag dat afgeletterd wordt. Klopt het
-   niet, dan hoeft alleen déze functie aangepast te worden. */
+/* Match-bericht voor Twinfield (developers.twinfield.com → Miscellaneous →
+   Matching). Matchcode 170 = debiteuren afletteren ("DEB" kent Twinfield niet,
+   gemeten 15 okt). Per regel boekstukcode, -nummer en regelnummer;
+   <matchvalue> alleen bij een deelbetaling (anders het hele openstaande
+   bedrag). Een verschil boekt Twinfield zelf weg via <writeoff type="…"> op
+   één regel: currency = koersverschil, writeoff = afboeking. */
 function bouwMatchXml(office, regels) {
+  const d = new Date();
+  const vandaag = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
   const lijnen = regels.map(r =>
     `    <line>\n` +
     `      <transcode>${xmlEsc(r.boekstukcode)}</transcode>\n` +
     `      <transnumber>${xmlEsc(r.boekstuknr)}</transnumber>\n` +
     `      <transline>${xmlEsc(r.regelnr || "1")}</transline>\n` +
-    `      <matchvalue>${r.bedrag.toFixed(2)}</matchvalue>\n` +
+    (r.heel ? "" : `      <matchvalue>${r.bedrag.toFixed(2)}</matchvalue>\n`) +
+    (r.afboeken ? `      <writeoff type="${xmlEsc(r.afboekSoort)}">${r.afboeken.toFixed(2)}</writeoff>\n` : "") +
     `    </line>`).join("\n");
   return `<match>\n  <set>\n    <office>${xmlEsc(office)}</office>\n` +
-         `    <matchcode>DEB</matchcode>\n    <lines>\n${lijnen}\n    </lines>\n  </set>\n</match>`;
+         `    <matchcode>170</matchcode>\n    <matchdate>${vandaag}</matchdate>\n` +
+         `    <lines>\n${lijnen}\n    </lines>\n  </set>\n</match>`;
 }
 
 async function voerMatchUit(office, regels) {

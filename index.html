@@ -200,12 +200,18 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
           </table>
         </div>
         <div class="match-voet">
-          <div>Gekozen: <b id="match-aantal">0</b> posten · facturen <b id="match-facturen">0,00</b> · ontvangsten <b id="match-ontvangst">0,00</b> · verschil <b id="match-verschil">0,00</b> <span class="zacht klein">(moet nul zijn)</span></div>
+          <div>Gekozen: <b id="match-aantal">0</b> posten · facturen <b id="match-facturen">0,00</b> · ontvangsten <b id="match-ontvangst">0,00</b> · verschil <b id="match-verschil">0,00</b> <span class="zacht klein">(moet nul zijn, of kies hoe het verschil weg mag)</span></div>
           <div class="knoppen">
             <button class="knop stil" id="btn-match-alles">Alles aanvinken</button>
             <button class="knop stil" id="btn-match-xml">Toon match-bericht</button>
             <button class="knop goud" id="btn-match-door">Doorvoeren in Twinfield</button>
           </div>
+        </div>
+        <div id="match-verschilkeuze" class="verschilkeuze" style="display:none">
+          <div>Het verschil van <b id="match-verschil-bedrag">0,00</b> wegboeken als:</div>
+          <label class="vink"><input type="radio" name="match-soort" value="currency"> Koersverschil</label>
+          <label class="vink"><input type="radio" name="match-soort" value="writeoff"> Afboeking</label>
+          <div id="match-verschil-uitleg" class="klein"></div>
         </div>
         <pre id="match-xml" class="code" style="display:none"></pre>
         <div id="melding-match" class="melding-plek"></div>
