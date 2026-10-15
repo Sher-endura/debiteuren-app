@@ -340,11 +340,21 @@ async function vulRegelnummers(office, klant, lijst) {
   const gelezen = new Map();
   for (const p of lijst) {
     if (p.regelnr) continue;
+    // Verkoopfactuur: de debiteur staat altijd op regel 1 (de totaalregel).
+    if (p.boekstukcode.toUpperCase() === "VRK") { p.regelnr = "1"; continue; }
     const sleutel = p.boekstukcode + "~" + p.boekstuknr;
     if (!gelezen.has(sleutel)) {
-      const doc = await dlLees(`<read><type>transaction</type><office>${xmlEsc(office)}</office>` +
-        `<code>${xmlEsc(p.boekstukcode)}</code><number>${xmlEsc(p.boekstuknr)}</number></read>`,
-        `regelnummer van ${p.boekstukcode} ${p.boekstuknr} opzoeken`);
+      const vraag = `<read><type>transaction</type><office>${xmlEsc(office)}</office>` +
+        `<code>${xmlEsc(p.boekstukcode)}</code><number>${xmlEsc(p.boekstuknr)}</number></read>`;
+      // DirectLink geeft af en toe een kale 503 (15 okt): twee keer opnieuw proberen.
+      let doc;
+      for (let poging = 1; ; poging++) {
+        try { doc = await dlLees(vraag, `regelnummer van ${p.boekstukcode} ${p.boekstuknr} opzoeken`); break; }
+        catch (e) {
+          if (poging >= 3 || !/HTTP 50[234]/.test(e.message)) throw e;
+          await new Promise(r => setTimeout(r, poging * 3000));
+        }
+      }
       const t = doc.getElementsByTagName("transaction")[0];
       if (!t || t.getAttribute("result") === "0")
         throw new Error(`Boeking ${p.boekstukcode} ${p.boekstuknr} kon niet gelezen worden` +
