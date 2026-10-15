@@ -3,7 +3,7 @@
    bewaard door de service worker: elke aanroep naar het doorgeefluik gaat
    rechtstreeks naar het netwerk. */
 
-const CACHE = "debiteuren-endura-v6";   // v6: afletteren met koersverschil/afboeking, 15 okt 2026
+const CACHE = "debiteuren-endura-v7";   // v7: altijd verse bestanden (v=7 op de links), 15 okt 2026
 const OMHULSEL = ["./", "index.html", "styles.css", "api.js", "app.js", "config.js", "manifest.json",
   "pup-logo.png", "pup-logo-licht.png", "favicon.ico", "favicon-16.png", "favicon-32.png", "favicon-48.png",
   "favicon-180.png", "favicon-192.png", "favicon-512.png", "werkbeschrijving.html", "werkbeschrijving.pdf"];
@@ -24,13 +24,16 @@ self.addEventListener("fetch", (e) => {
   // bibliotheek) laten we ongemoeid: dat moet altijd verse gegevens zijn.
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
 
+  // cache "no-cache": altijd bij GitHub navragen of er een nieuwere versie is
+  // (anders houdt de browser een bestand 10 minuten vast en kreeg je op 15 okt
+  // een nieuwe pagina met een oude api.js).
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, { cache: "no-cache" })
       .then(antwoord => {
         const kopie = antwoord.clone();
         caches.open(CACHE).then(c => c.put(e.request, kopie)).catch(() => {});
         return antwoord;
       })
-      .catch(() => caches.match(e.request).then(gevonden => gevonden || caches.match("index.html")))
+      .catch(() => caches.match(e.request, { ignoreSearch: true }).then(gevonden => gevonden || caches.match("index.html")))
   );
 });
