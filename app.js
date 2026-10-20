@@ -619,6 +619,9 @@ function maakAanmaningen() {
   document.getElementById("verstuurbalk").style.display = "";
   wisMelding("melding-verstuur");
   vernieuwVerstuurbalk();
+  // De teksten staan ONDER de lijst met debiteuren (bij Endura 60+), dus buiten beeld:
+  // erheen scrollen, anders lijkt de knop niets te doen (Shereen 20 okt 2026).
+  doel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 /* ------------------ hoofdschakelaar voor de aanmaningen ------------------
