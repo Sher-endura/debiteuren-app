@@ -10,11 +10,13 @@
 const OPSLAG_INST   = "debiteuren.instellingen.v1";
 const OPSLAG_POSTEN = "debiteuren.posten.v1";
 const OPSLAG_EMAILS = "debiteuren.emails.v1";
+const OPSLAG_TALEN  = "debiteuren.talen.v1";   // debiteurnummer -> "nl" | "en" (20 okt 2026)
 
 let inst = { office: "ENDURA", dagen: 30, afzender: "Endura Accounting & Advisory", antwoord: "" };
 let posten = [];            // genormaliseerde openstaande posten
 let opgehaaldOp = null;     // wanneer voor het laatst opgehaald
 let emails = {};            // debiteurnummer -> e-mailadres
+let talen = {};             // debiteurnummer -> taal van de aanmaning (per debiteur gekozen, onthouden)
 let logregels = [];
 let openGroepen = new Set();
 let topSortering = { veld: "open", richting: -1 };   // tabel "Grootste openstaande debiteuren"
@@ -574,13 +576,19 @@ function maakAanmaningen() {
 
   doel.innerHTML = groepen.map((g, i) => {
     const soort = keuze === "auto" ? autoNiveau(g) : keuze;
-    const brief = maakBrief(g, soort, taal);
+    // Taal per debiteur (Shereen 20 okt 2026): eerder gekozen taal van deze debiteur, anders de keuze bovenaan.
+    const briefTaal = talen[g.klant] || taal;
+    const brief = maakBrief(g, soort, briefTaal);
     return `
-    <div class="brief" data-i="${i}" data-klant="${escapeHtml(g.klant)}">
+    <div class="brief" data-i="${i}" data-klant="${escapeHtml(g.klant)}" data-soort="${soort}">
       <div class="brief-kop">
         <label class="vink"><input type="checkbox" class="verstuur-vink" checked> versturen</label>
         <b>${escapeHtml(g.naam || g.klant)}</b>
         <span class="zacht klein">${escapeHtml(g.klant)} · ${geld(g.open, [...g.valutas][0] || "")}${keuze === "auto" ? ` · <span class="goud-tekst">${NIVEAU_NAAM[soort]}</span> (oudste ${g.oudste ?? 0} dagen)` : ""}</span>
+        <select class="brief-taal" title="Taal van deze tekst — P.up onthoudt het voor deze debiteur">
+          <option value="nl"${briefTaal === "nl" ? " selected" : ""}>Nederlands</option>
+          <option value="en"${briefTaal === "en" ? " selected" : ""}>Engels</option>
+        </select>
         <input class="email" type="email" placeholder="e-mailadres van de debiteur" value="${escapeHtml(emails[g.klant] || "")}" data-klant="${escapeHtml(g.klant)}">
         <span class="rek"></span>
         <button class="knop stil klein btn-kopie">Kopieer tekst</button>
@@ -613,6 +621,16 @@ function maakAanmaningen() {
       }
       location.href = link;
     });
+    kaart.querySelector(".brief-taal").addEventListener("change", (e) => {
+      const klant = kaart.dataset.klant, nieuw = e.target.value;
+      talen[klant] = nieuw;
+      try { localStorage.setItem(OPSLAG_TALEN, JSON.stringify(talen)); } catch (_) {}
+      const g = groepen.find(x => x.klant === klant);
+      if (!g) return;
+      const brief = maakBrief(g, kaart.dataset.soort, nieuw);
+      onderwerp.value = brief.onderwerp;
+      tekstveld.value = brief.body;
+    });
     kaart.querySelector(".verstuur-vink").addEventListener("change", vernieuwVerstuurbalk);
     emailveld.addEventListener("input", vernieuwVerstuurbalk);
   });
@@ -622,6 +640,14 @@ function maakAanmaningen() {
   // De teksten staan ONDER de lijst met debiteuren (bij Endura 60+), dus buiten beeld:
   // erheen scrollen, anders lijkt de knop niets te doen (Shereen 20 okt 2026).
   doel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* Gemaakte teksten weer weghalen ("undo", Shereen 20 okt 2026). Er was nog niets verstuurd of bewaard. */
+function wisAanmaningen() {
+  document.getElementById("aanmaning-uitkomst").innerHTML = "";
+  document.getElementById("verstuurbalk").style.display = "none";
+  wisMelding("melding-verstuur");
+  document.getElementById("btn-maak-aanmaningen").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 /* ------------------ hoofdschakelaar voor de aanmaningen ------------------
@@ -814,6 +840,7 @@ function laadInstellingen() {
     try { localStorage.setItem(OPSLAG_INST, JSON.stringify(inst)); } catch (e) {}
   }
   try { emails = JSON.parse(localStorage.getItem(OPSLAG_EMAILS)) || {}; } catch (e) { emails = {}; }
+  try { talen = JSON.parse(localStorage.getItem(OPSLAG_TALEN)) || {}; } catch (e) { talen = {}; }
   document.getElementById("in-office").value = inst.office || "";
   document.getElementById("in-dagen").value = inst.dagen ?? 30;
   document.getElementById("in-afzender").value = inst.afzender || "";
@@ -983,6 +1010,7 @@ document.getElementById("aanm-alleen-vervallen").addEventListener("change", vern
 document.getElementById("btn-maak-aanmaningen").addEventListener("click", maakAanmaningen);
 document.getElementById("btn-emails").addEventListener("click", haalEmails);
 document.getElementById("btn-verstuur-alles").addEventListener("click", verstuurAlles);
+document.getElementById("btn-wis-aanmaningen").addEventListener("click", wisAanmaningen);
 document.getElementById("btn-schakelaar").addEventListener("click", zetSchakelaar);
 
 ["in-office", "in-dagen", "in-afzender", "in-antwoord"].forEach(id =>
@@ -1048,7 +1076,7 @@ document.getElementById("btn-werkbeschrijving").addEventListener("click", (e) =>
 
 document.getElementById("btn-wis").addEventListener("click", () => {
   if (!confirm("Alle opgeslagen posten, instellingen en e-mailadressen in deze browser wissen?")) return;
-  [OPSLAG_INST, OPSLAG_POSTEN, OPSLAG_EMAILS, "debiteuren.velddefinitie.v1"].forEach(k => localStorage.removeItem(k));
+  [OPSLAG_INST, OPSLAG_POSTEN, OPSLAG_EMAILS, OPSLAG_TALEN, "debiteuren.velddefinitie.v1"].forEach(k => localStorage.removeItem(k));
   location.reload();
 });
 

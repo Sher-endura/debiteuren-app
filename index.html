@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css?v=12">
+<link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body>
 <script>/* thema toepassen vóór de eerste weergave, anders knippert het scherm */
@@ -172,6 +172,7 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
         <div id="verstuurbalk" class="match-voet" style="display:none">
           <div><span id="verstuur-telling"></span> <span class="zacht klein">— zet het vinkje "versturen" uit bij wie geen mail mag krijgen.</span></div>
           <div class="knoppen">
+            <button class="knop stil" id="btn-wis-aanmaningen" title="Haalt de gemaakte teksten weer weg. Er is niets verstuurd of bewaard.">Teksten weghalen</button>
             <button class="knop goud" id="btn-verstuur-alles">Versturen via Microsoft 365</button>
           </div>
         </div>
@@ -247,9 +248,9 @@ try { if (localStorage.getItem("debiteuren.thema") === "licht") document.body.cl
   </main>
 </div>
 
-<script src="config.js?v=12"></script>
+<script src="config.js?v=13"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="api.js?v=12"></script>
-<script src="app.js?v=12"></script>
+<script src="api.js?v=13"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>
