@@ -10,13 +10,13 @@
 const OPSLAG_INST   = "debiteuren.instellingen.v1";
 const OPSLAG_POSTEN = "debiteuren.posten.v1";
 const OPSLAG_EMAILS = "debiteuren.emails.v1";
-const OPSLAG_TALEN  = "debiteuren.talen.v1";   // debiteurnummer -> "nl" | "en" (20 okt 2026)
+const OPSLAG_TALEN  = "debiteuren.talen.v1";   // ALLEEN nog om een oude browserkeuze één keer naar de server te brengen
 
 let inst = { office: "ENDURA", dagen: 30, afzender: "Endura Accounting & Advisory", antwoord: "" };
 let posten = [];            // genormaliseerde openstaande posten
 let opgehaaldOp = null;     // wanneer voor het laatst opgehaald
 let emails = {};            // debiteurnummer -> e-mailadres
-let talen = {};             // debiteurnummer -> taal van de aanmaning (per debiteur gekozen, onthouden)
+let talen = {};             // debiteurnummer -> taal van de aanmaning; staat op de SERVER (voor iedereen), zie haalTalen
 let logregels = [];
 let openGroepen = new Set();
 let topSortering = { veld: "open", richting: -1 };   // tabel "Grootste openstaande debiteuren"
@@ -585,7 +585,7 @@ function maakAanmaningen() {
         <label class="vink"><input type="checkbox" class="verstuur-vink" checked> versturen</label>
         <b>${escapeHtml(g.naam || g.klant)}</b>
         <span class="zacht klein">${escapeHtml(g.klant)} · ${geld(g.open, [...g.valutas][0] || "")}${keuze === "auto" ? ` · <span class="goud-tekst">${NIVEAU_NAAM[soort]}</span> (oudste ${g.oudste ?? 0} dagen)` : ""}</span>
-        <select class="brief-taal" title="Taal van deze tekst — P.up onthoudt het voor deze debiteur">
+        <select class="brief-taal" title="Taal van deze tekst — P.up onthoudt het voor deze debiteur, voor iedereen">
           <option value="nl"${briefTaal === "nl" ? " selected" : ""}>Nederlands</option>
           <option value="en"${briefTaal === "en" ? " selected" : ""}>Engels</option>
         </select>
@@ -623,8 +623,7 @@ function maakAanmaningen() {
     });
     kaart.querySelector(".brief-taal").addEventListener("change", (e) => {
       const klant = kaart.dataset.klant, nieuw = e.target.value;
-      talen[klant] = nieuw;
-      try { localStorage.setItem(OPSLAG_TALEN, JSON.stringify(talen)); } catch (_) {}
+      bewaarTaal(klant, nieuw);
       const g = groepen.find(x => x.klant === klant);
       if (!g) return;
       const brief = maakBrief(g, kaart.dataset.soort, nieuw);
@@ -694,6 +693,26 @@ function toonSchakelaar(stand) {
   knop.textContent = stand.aan ? "⛔ Stilzetten" : "▶ Activeren";
   // Versturen kan alleen als de schakelaar aan staat.
   vernieuwVerstuurbalk();
+}
+
+/* Taal per debiteur, voor iedereen (Shereen 20 okt 2026): bewaard op de server via aanmaningen-schakelaar.
+   Een keuze die eerder die dag alleen in deze browser werd bewaard, gaat één keer mee naar de server. */
+async function haalTalen() {
+  try {
+    talen = (await roepSchakelaar({ actie: "talen" })).talen || {};
+    let oud = {};
+    try { oud = JSON.parse(localStorage.getItem(OPSLAG_TALEN)) || {}; } catch (e) {}
+    for (const [klant, taal] of Object.entries(oud)) {
+      if (!talen[klant]) talen = (await roepSchakelaar({ actie: "taal_zet", klant, taal })).talen || talen;
+    }
+    localStorage.removeItem(OPSLAG_TALEN);
+  } catch (e) { /* geen verbinding: dan geldt de keuze bovenaan */ }
+}
+
+async function bewaarTaal(klant, taal) {
+  talen[klant] = taal;
+  try { talen = (await roepSchakelaar({ actie: "taal_zet", klant, taal })).talen || talen; }
+  catch (e) { toonMelding("melding-verstuur", "fout", "Taalkeuze niet bewaard op de server: " + escapeHtml(e.message)); }
 }
 
 async function haalSchakelaar() {
@@ -840,7 +859,6 @@ function laadInstellingen() {
     try { localStorage.setItem(OPSLAG_INST, JSON.stringify(inst)); } catch (e) {}
   }
   try { emails = JSON.parse(localStorage.getItem(OPSLAG_EMAILS)) || {}; } catch (e) { emails = {}; }
-  try { talen = JSON.parse(localStorage.getItem(OPSLAG_TALEN)) || {}; } catch (e) { talen = {}; }
   document.getElementById("in-office").value = inst.office || "";
   document.getElementById("in-dagen").value = inst.dagen ?? 30;
   document.getElementById("in-afzender").value = inst.afzender || "";
@@ -1100,6 +1118,7 @@ document.getElementById("btn-log-wis").addEventListener("click", () => { logrege
   const start = (location.hash || "").replace("#", "");
   naarTab(TAB_TITELS[start] ? start : "overzicht");
   haalSchakelaar();   // stand van de hoofdschakelaar ophalen (mag op de achtergrond)
+  haalTalen();        // taal per debiteur (server, voor iedereen)
   // Bij elke keer openen/inloggen meteen de actuele stand uit Twinfield halen
   // (Shereen 12 okt: "bij de login moet alles er live in staan"). De laatst
   // bewaarde cijfers staan er intussen al, dus het scherm is nooit leeg.
