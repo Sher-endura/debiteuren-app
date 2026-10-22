@@ -40,7 +40,9 @@ async function initAuth() {
   sb.auth.onAuthStateChange((event) => {
     if (window.reserveInlogBezig) return;   // reserve-inlog: eerst de tweestapscode, dan pas herladen
     if (event === "SIGNED_IN" && document.getElementById("login-overlay").style.display !== "none") location.reload();
-    if (event === "SIGNED_OUT") location.reload();
+    // Alleen herladen als de app al open stond. Bij het opstarten ruimt supabase een oude, verlopen
+    // inlog op (ook SIGNED_OUT); herladen gooide dan de E-Board-code weg → kaal inlogscherm (22 okt 2026).
+    if (event === "SIGNED_OUT" && gebruiker) location.reload();
   });
   const doorgeefFout = await doorgeefbriefjeInwisselen();
   const { data: { session } } = await sb.auth.getSession();

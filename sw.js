@@ -3,7 +3,7 @@
    bewaard door de service worker: elke aanroep naar het doorgeefluik gaat
    rechtstreeks naar het netwerk. */
 
-const CACHE = "debiteuren-endura-v14";  // v14: taalkeuze per debiteur op de server (20 okt 2026). Was:  // v13: taal per debiteur + Teksten weghalen (20 okt 2026). Was:  // v12: Teksten maken scrolt naar de teksten (20 okt 2026). Was:  // v11: alleen via E-Board (veiligheid 15 okt 2026). Was:  // v10: tabblad Afletteren weg (afletteren gebeurt in Twinfield), 15 okt 2026
+const CACHE = "debiteuren-endura-v15";  // v15: E-Board-code niet meer kwijt bij een oude inlog (22 okt 2026). Was:  // v14: taalkeuze per debiteur op de server (20 okt 2026). Was:  // v13: taal per debiteur + Teksten weghalen (20 okt 2026). Was:  // v12: Teksten maken scrolt naar de teksten (20 okt 2026). Was:  // v11: alleen via E-Board (veiligheid 15 okt 2026). Was:  // v10: tabblad Afletteren weg (afletteren gebeurt in Twinfield), 15 okt 2026
 const OMHULSEL = ["./", "index.html", "styles.css", "api.js", "app.js", "config.js", "manifest.json",
   "pup-logo.png", "pup-logo-licht.png", "favicon.ico", "favicon-16.png", "favicon-32.png", "favicon-48.png",
   "favicon-180.png", "favicon-192.png", "favicon-512.png", "werkbeschrijving.html", "werkbeschrijving.pdf"];
